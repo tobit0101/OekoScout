@@ -13,6 +13,7 @@ interface AreaPanelProps {
   shape: AreaShape;
   statsState: AreaStatsState;
   rainKey: RainKey;
+  onOpenInfo: () => void;
   onClear: () => void;
 }
 
@@ -62,7 +63,7 @@ function Notice({ children, role }: { children: string; role?: 'alert' }) {
   );
 }
 
-export function AreaPanel({ shape, statsState, rainKey, onClear }: AreaPanelProps) {
+export function AreaPanel({ shape, statsState, rainKey, onOpenInfo, onClear }: AreaPanelProps) {
   const { status: copyStatus, copy } = useCopyToClipboard();
   const stats = statsState.status === 'ready' ? statsState.stats : null;
   const note = stats ? coverageNote(stats) : null;
@@ -88,6 +89,9 @@ export function AreaPanel({ shape, statsState, rainKey, onClear }: AreaPanelProp
           onClick={() => stats && void copy(buildCopyText(shape, stats, rainKey))}
         >
           {COPY_LABEL[copyStatus]}
+        </button>
+        <button type="button" className="area-button" aria-haspopup="dialog" onClick={onOpenInfo}>
+          Details
         </button>
         <button type="button" className="area-button" onClick={onClear}>
           Fläche löschen

@@ -1,4 +1,4 @@
-import type { AreaShape, LatLngPoint } from '../types/area';
+import type { AreaShape, DrawingTool, LatLngPoint } from '../types/area';
 
 const CIRCLE_VERTICES = 64;
 const FULL_TURN_DEGREES = 360;
@@ -46,9 +46,10 @@ export function pathCenter(path: readonly LatLngPoint[]): LatLngPoint {
   return bounds.getCenter().toJSON();
 }
 
-export function buildShape(ring: readonly LatLngPoint[], areaM2: number, center: LatLngPoint): AreaShape {
+export function buildShape(kind: DrawingTool, ring: readonly LatLngPoint[], areaM2: number, center: LatLngPoint): AreaShape {
   const closed = [...ring, ring[0]];
   return {
+    kind,
     geometry: { type: 'Polygon', coordinates: [closed.map((point) => [point.lng, point.lat])] },
     areaM2,
     center,

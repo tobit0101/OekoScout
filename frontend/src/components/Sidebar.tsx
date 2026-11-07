@@ -228,7 +228,7 @@ export function Sidebar(props: SidebarProps) {
             <Separator />
             <section aria-labelledby="area-title">
               <SectionTitle id="area-title">Markierte Fläche</SectionTitle>
-              <AreaPanel shape={area.shape} statsState={area.statsState} rainKey={rainKey} onClear={area.clear} />
+              <AreaPanel shape={area.shape} statsState={area.statsState} rainKey={rainKey} onOpenInfo={area.openInfo} onClear={area.clear} />
             </section>
           </>
         )}

@@ -1,11 +1,9 @@
-import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import type { ReactNode } from 'react';
 import type { CellResponse, RainKey } from '../../types/api';
 import { ANNAHME_LABEL, AUSSAGEKRAFT_DISPLAY, BODENGRUPPE_LABEL, KLASSE_LABEL } from '../../labels';
 import { COLORS } from '../../theme';
 import { formatDecimal } from '../../utils/format';
-import { CardButton } from './CardButton';
-import { useCopyToClipboard } from './useCopyToClipboard';
+import { InfoDialogShell } from '../dialog/InfoDialogShell';
 
 interface CellInfoDialogProps {
   cell: CellResponse;
@@ -105,72 +103,26 @@ function buildClipboardText(rows: InfoRow[]): string {
 }
 
 export function CellInfoDialog({ cell, lat, lng, rainKey, onClose }: CellInfoDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const { status, copy } = useCopyToClipboard();
   const rows = buildRows({ cell, lat, lng, rainKey });
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog || dialog.open) return;
-    dialog.showModal();
-  }, []);
-
-  const closeOnBackdrop = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target === event.currentTarget) onClose();
-  };
-
-  return createPortal(
-    <dialog
-      ref={dialogRef}
-      className="cell-info-dialog"
-      aria-labelledby="cell-info-title"
+  return (
+    <InfoDialogShell
+      titleId="cell-info-title"
+      title="Details zur Fläche"
+      copyLabel="Alle Angaben kopieren"
+      copyText={buildClipboardText(rows)}
       onClose={onClose}
-      onClick={closeOnBackdrop}
     >
-      <div className="cell-info-dialog__body">
-        <header className="cell-info-dialog__header">
-          <h2 id="cell-info-title">Details zur Fläche</h2>
-          <span aria-live="polite" className="cell-info-dialog__feedback">
-            {status === 'copied' && 'Kopiert'}
-            {status === 'failed' && 'Kopieren nicht möglich'}
-          </span>
-          <CardButton
-            label="Alle Angaben kopieren"
-            title="Alle Angaben kopieren"
-            onClick={() => void copy(buildClipboardText(rows))}
-          >
-            {status === 'copied' ? (
-              <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-            ) : (
-              <>
-                <rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
-                <path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" strokeWidth="2" />
-              </>
-            )}
-          </CardButton>
-          <button
-            type="button"
-            className="popup-icon-button"
-            aria-label="Schließen"
-            onClick={onClose}
-            style={{ fontSize: 22, lineHeight: 1 }}
-          >
-            ×
-          </button>
-        </header>
+      <dl className="cell-info-dialog__list">
+        {rows.map((row) => (
+          <div key={row.term} className="cell-info-dialog__row">
+            <dt>{row.term}</dt>
+            <dd>{row.content ?? row.text}</dd>
+          </div>
+        ))}
+      </dl>
 
-        <dl className="cell-info-dialog__list">
-          {rows.map((row) => (
-            <div key={row.term} className="cell-info-dialog__row">
-              <dt>{row.term}</dt>
-              <dd>{row.content ?? row.text}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <p style={{ margin: '12px 0 0', fontSize: 12, color: COLORS.textMuted }}>{NOTE}</p>
-      </div>
-    </dialog>,
-    document.body,
+      <p style={{ margin: '12px 0 0', fontSize: 12, color: COLORS.textMuted }}>{NOTE}</p>
+    </InfoDialogShell>
   );
 }

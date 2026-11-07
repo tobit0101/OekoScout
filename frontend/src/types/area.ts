@@ -9,6 +9,7 @@ export interface LatLngPoint {
 }
 
 export interface AreaShape {
+  kind: DrawingTool;
   geometry: AreaGeometry;
   areaM2: number;
   center: LatLngPoint;

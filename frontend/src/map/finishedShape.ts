@@ -32,7 +32,7 @@ function polygonShape(map: google.maps.Map, path: LatLngPoint[], onEdit: () => v
     measure() {
       const points = vertices.getArray().map((vertex) => vertex.toJSON());
       if (points.length < 3) return null;
-      return buildShape(points, pathArea(points), pathCenter(points));
+      return buildShape('polygon', points, pathArea(points), pathCenter(points));
     },
     setEditable: (editable) => polygon.setEditable(editable),
     dispose() {
@@ -50,7 +50,7 @@ function rectangleShape(map: google.maps.Map, bounds: google.maps.LatLngBoundsLi
       const current = rectangle.getBounds();
       if (!current) return null;
       const ring = boundsRing(current.toJSON());
-      return buildShape(ring, pathArea(ring), current.getCenter().toJSON());
+      return buildShape('rectangle', ring, pathArea(ring), current.getCenter().toJSON());
     },
     setEditable: (editable) => rectangle.setEditable(editable),
     dispose() {
@@ -69,7 +69,7 @@ function circleShape(map: google.maps.Map, center: LatLngPoint, radius: number, 
       if (!currentCenter) return null;
       const centerPoint = currentCenter.toJSON();
       const currentRadius = circle.getRadius();
-      return buildShape(circleRing(centerPoint, currentRadius), circleArea(currentRadius), centerPoint);
+      return buildShape('circle', circleRing(centerPoint, currentRadius), circleArea(currentRadius), centerPoint);
     },
     setEditable: (editable) => circle.setEditable(editable),
     dispose() {

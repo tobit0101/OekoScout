@@ -128,9 +128,21 @@
   transform: translate(-50%, -50%);
 }
 
+.area-label-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -4px -8px 0 0;
+}
+
+.area-label-info {
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
 .area-label-title {
   display: block;
-  margin-bottom: 2px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 1px;

@@ -48,3 +48,23 @@ export function buildCopyText(shape: AreaShape, stats: AreaStatsResponse, rainKe
   ];
   return lines.join('\n');
 }
+
+export interface AussagekraftEntry {
+  key: Aussagekraft;
+  label: string;
+  color: string;
+  count: number;
+  share: string;
+}
+
+export function aussagekraftEntries(counts: Record<Aussagekraft, number>): AussagekraftEntry[] {
+  const keys = AUSSAGEKRAFT_ORDER.filter((key) => counts[key] > 0);
+  const total = keys.reduce((sum, key) => sum + counts[key], 0);
+  return keys.map((key) => ({
+    key,
+    label: AUSSAGEKRAFT_DISPLAY[key].label,
+    color: AUSSAGEKRAFT_DISPLAY[key].color,
+    count: counts[key],
+    share: percentOf(counts[key], total),
+  }));
+}

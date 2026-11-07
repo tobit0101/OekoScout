@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AreaInfoDialog } from './components/area/AreaInfoDialog';
 import { InfoBar } from './components/InfoBar';
 import { Legend } from './components/Legend';
 import { NavBar } from './components/NavBar';
@@ -119,6 +120,10 @@ export function App() {
       </main>
 
       <InfoBar statsState={statsState} rainKey={rainKey} />
+
+      {area.infoOpen && area.shape && (
+        <AreaInfoDialog shape={area.shape} statsState={area.statsState} rainKey={rainKey} onClose={area.closeInfo} />
+      )}
     </div>
   );
 }

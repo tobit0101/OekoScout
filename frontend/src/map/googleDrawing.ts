@@ -10,6 +10,7 @@ export interface DrawingCallbacks {
   onDraftChange(draft: DrawDraft | null): void;
   onShapeChange(shape: AreaShape, finished: boolean): void;
   onToolEnd(): void;
+  onOpenInfo(): void;
 }
 
 const EDIT_DEBOUNCE_MS = 300;
@@ -43,7 +44,7 @@ export class AreaDrawingController {
     private readonly map: google.maps.Map,
     private readonly callbacks: DrawingCallbacks,
   ) {
-    this.label = new AreaLabel(map);
+    this.label = new AreaLabel(map, () => callbacks.onOpenInfo());
     this.host = {
       map,
       reportDraft: (draft) => this.queueDraft(draft),

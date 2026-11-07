@@ -16,6 +16,9 @@ export interface AreaSelection {
   statsState: AreaStatsState;
   clearNonce: number;
   finishNonce: number;
+  infoOpen: boolean;
+  openInfo: () => void;
+  closeInfo: () => void;
   setTool: (tool: AreaTool) => void;
   clear: () => void;
   handleDraftChange: (draft: DrawDraft | null) => void;
@@ -34,6 +37,7 @@ export function useAreaSelection(): AreaSelection {
   const [statsState, setStatsState] = useState<AreaStatsState>(IDLE);
   const [clearNonce, setClearNonce] = useState(0);
   const [finishNonce, setFinishNonce] = useState(0);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!shape) return;
@@ -52,6 +56,7 @@ export function useAreaSelection(): AreaSelection {
     setShape(null);
     setStatsState(IDLE);
     setDraft(null);
+    setInfoOpen(false);
     setTool('select');
     setClearNonce((nonce) => nonce + 1);
   }, []);
@@ -61,6 +66,9 @@ export function useAreaSelection(): AreaSelection {
     setStatsState(LOADING);
     if (finished) setFinishNonce((nonce) => nonce + 1);
   }, []);
+
+  const openInfo = useCallback(() => setInfoOpen(true), []);
+  const closeInfo = useCallback(() => setInfoOpen(false), []);
 
   const handleToolEnd = useCallback(() => setTool('select'), []);
 
@@ -72,12 +80,15 @@ export function useAreaSelection(): AreaSelection {
       statsState,
       clearNonce,
       finishNonce,
+      infoOpen,
+      openInfo,
+      closeInfo,
       setTool,
       clear,
       handleDraftChange: setDraft,
       handleShapeChange,
       handleToolEnd,
     }),
-    [tool, draft, shape, statsState, clearNonce, finishNonce, clear, handleShapeChange, handleToolEnd],
+    [tool, draft, shape, statsState, clearNonce, finishNonce, infoOpen, openInfo, closeInfo, clear, handleShapeChange, handleToolEnd],
   );
 }

@@ -4,4 +4,11 @@ export const HEATMAP_MIN_ZOOM = 13;
 export const HEATMAP_OPACITY = 0.75;
 export const FILTER_DEBOUNCE_MS = 250;
 
+export const GOOGLE_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.attraction', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.medical', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.sports_complex', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+];
+
 export const GOOGLE_MAPS_API_KEY: string = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '').trim();

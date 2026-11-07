@@ -7,7 +7,7 @@ import { AreaDrawingController } from '../map/googleDrawing';
 import { applyHeatmap, createHeatmapMapType } from '../map/googleHeatmap';
 import { loadGoogleMaps } from '../map/googleMapsLoader';
 import { addRegionOutlines, removeRegionOutlines } from '../map/googleRegions';
-import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, GOOGLE_MAPS_API_KEY } from '../map/mapConfig';
+import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, GOOGLE_MAP_STYLES, GOOGLE_MAPS_API_KEY } from '../map/mapConfig';
 import { AreaHintBand } from './area/AreaHintBand';
 import { AreaToolbar } from './area/AreaToolbar';
 import { labelScoreText } from './area/areaFormat';
@@ -56,12 +56,14 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, f
           fullscreenControl: false,
           clickableIcons: false,
           gestureHandling: 'greedy',
+          styles: GOOGLE_MAP_STYLES,
         });
         const newPopup = new GoogleCellPopupController(newMap, latestRef.current.rainKey);
         const newDrawing = new AreaDrawingController(newMap, {
           onDraftChange: (draft) => areaRef.current?.handleDraftChange(draft),
           onShapeChange: (shape, finished) => areaRef.current?.handleShapeChange(shape, finished),
           onToolEnd: () => areaRef.current?.handleToolEnd(),
+          onOpenInfo: () => areaRef.current?.openInfo(),
         });
         newMap.addListener('click', (event: google.maps.MapMouseEvent) => {
           if (!event.latLng || newDrawing.isDrawing) return;
