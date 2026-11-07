@@ -1,8 +1,0 @@
-data/
-.venv/
-.git/
-tests/
-docs/
-__pycache__/
-.pytest_cache/
-.superpowers/

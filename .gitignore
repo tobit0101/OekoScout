@@ -19,3 +19,6 @@ data/
 
 # Tooling cache
 .vite/
+.DS_Store
+.superpowers/sdd/
+.superpowers/brainstorm/*/state/

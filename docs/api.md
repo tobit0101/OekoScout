@@ -8,13 +8,13 @@ Die Raster-Kacheln (XYZ) für die flächige Darstellung kommen **nicht** von die
 
 | | |
 |---|---|
-| Basis-URL lokal | `http://localhost:8000/api/v1` |
+| Basis-URL lokal | `http://localhost:8001/api/v1` |
 | Format | JSON, UTF-8 |
 | Methoden | nur `GET` |
 | CORS | offen (`Access-Control-Allow-Origin: *`) |
 | Authentifizierung | keine |
 | Koordinaten | WGS84 (EPSG:4326), Dezimalgrad |
-| Interaktive Doku | `http://localhost:8000/docs` (Swagger), Schema unter `/openapi.json` |
+| Interaktive Doku | `http://localhost:8001/docs` (Swagger), Schema unter `/openapi.json` |
 
 Start: `docker compose up --build` im Repo-Wurzelverzeichnis. Die Datendateien müssen in `./data` liegen.
 
@@ -56,7 +56,7 @@ Liefert die Zelle an einer Koordinate, z. B. für Klick oder Hover auf der Karte
 Gefunden wird die Zelle, deren Mittelpunkt der Koordinate am nächsten liegt, im Umkreis von etwa 1 m. Außerhalb der 8 Regionen gibt es keine Zellen, die API antwortet dann mit 404.
 
 ```bash
-curl "http://localhost:8000/api/v1/cell?lat=48.9127069&lng=8.7206437"
+curl "http://localhost:8001/api/v1/cell?lat=48.9127069&lng=8.7206437"
 ```
 
 **200**
@@ -156,7 +156,7 @@ Bereichsfehler enthalten zusätzlich `ctx` (z. B. `{ "le": 90.0 }`).
 Liefert die Umrisse der 8 Regionen als GeoJSON-FeatureCollection in WGS84. Die Koordinatenreihenfolge ist nach RFC 7946 `[lng, lat]` mit 7 Nachkommastellen.
 
 ```bash
-curl "http://localhost:8000/api/v1/regions"
+curl "http://localhost:8001/api/v1/regions"
 ```
 
 **200** (gekürzt)

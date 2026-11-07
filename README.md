@@ -4,14 +4,54 @@
 
 Interaktiver Prototyp für Pforzheim auf Basis offener & städtischer Geodaten (Starkregengefahrenkarte, LGL ALKIS, Copernicus Imperviousness, LGRB Bodenkarte/Hydrogeologie, PFAU Einwohnerdaten, LUBW Schutzgebiete, Niederschlagswassergebühr-Flächen) kombiniert mit der hydrologischen Methodik aus dem **Arup Global Sponge Cities Snapshot** (Blau-Grün-Grau-Infrastrukturbilanz, Hydrological Soil Groups A–D und USDA-SCS Curve Number Abflussmodellierung).
 
+## Projektstruktur
+
+| Ordner | Inhalt |
+|---|---|
+| `frontend/` | React + Vite + Leaflet, Karten-Oberfläche |
+| `backend/` | REST-API (FastAPI + DuckDB), liefert Sponge Score je m², Regionen und Kennzahlen |
+| `data/` | Datendateien für das Backend, nicht im Git |
+| `docs/` | API-Vertrag ([`docs/api.md`](docs/api.md)), Datenmodell, Spezifikation |
+
 ## Live-Start
 
-Der Entwicklungsserver läuft unter:
-- **http://localhost:5173/**
+### 1. Daten bereitstellen
+
+Die Datendateien kommen aus dem Hackathon-Datenpaket `10_backend` und gehören nach `./data`:
+
+- `zellen.parquet`
+- `regionen.geojson`
+- `kennzahlen.json`
+
+Sie sind nicht im Git-Repository enthalten. Im Container müssen sie für UID 1000 lesbar sein (Standard 644 genügt).
+
+### 2. Backend starten
 
 ```bash
+docker compose up --build
+```
+
+Die API läuft danach auf `http://localhost:8001/api/v1`, die Swagger-Doku auf `http://localhost:8001/docs`.
+
+### 3. Frontend starten
+
+```bash
+cd frontend
 npm install
 npm run dev
+```
+
+Der Entwicklungsserver läuft unter **http://localhost:5173/** und leitet `/api` an das Backend auf Port 8001 weiter.
+
+### Backend ohne Docker
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+DATA_DIR=../data uvicorn app.main:app --reload --port 8001
+pytest
 ```
 
 ## Kernfunktionen
