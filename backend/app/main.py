@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import connection, load_regions, load_stats, router
+from app.tiles import data_extent
+from app.tiles import router as tiles_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,7 +15,12 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    warm_ups: tuple[Callable[[], object], ...] = (connection, load_regions, load_stats)
+    warm_ups: tuple[Callable[[], object], ...] = (
+        connection,
+        load_regions,
+        load_stats,
+        data_extent,
+    )
     for warm_up in warm_ups:
         try:
             warm_up()
@@ -32,3 +39,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(router)
+app.include_router(tiles_router)

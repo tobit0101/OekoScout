@@ -1,15 +1,15 @@
-# Schwammstadt-Potenzialkarte für Pforzheim
+# Schwamm Score Pforzheim
 
-**Wo bringt der nächste Quadratmeter Schwammstadt den größten Mehrwert?**
+**Wie viel Regen hält ein Quadratmeter Pforzheim zurück?**
 
-Interaktiver Prototyp für Pforzheim auf Basis offener & städtischer Geodaten (Starkregengefahrenkarte, LGL ALKIS, Copernicus Imperviousness, LGRB Bodenkarte/Hydrogeologie, PFAU Einwohnerdaten, LUBW Schutzgebiete, Niederschlagswassergebühr-Flächen) kombiniert mit der hydrologischen Methodik aus dem **Arup Global Sponge Cities Snapshot** (Blau-Grün-Grau-Infrastrukturbilanz, Hydrological Soil Groups A–D und USDA-SCS Curve Number Abflussmodellierung).
+Die Karte zeigt für jeden Quadratmeter im Rechengebiet den Schwamm Score: den Anteil eines Tagesregens, den die Fläche zurückhält. Grundlage sind offene und städtische Geodaten (u. a. LGL ALKIS, Luftbild, Höhenmodell, Bodenkarte) und das SCS-Curve-Number-Verfahren.
 
 ## Projektstruktur
 
 | Ordner | Inhalt |
 |---|---|
 | `frontend/` | React + Vite + Leaflet, Karten-Oberfläche |
-| `backend/` | REST-API (FastAPI + DuckDB), liefert Sponge Score je m², Regionen und Kennzahlen |
+| `backend/` | REST-API (FastAPI + DuckDB), liefert Schwamm Score je m², Kacheln, Regionen und Kennzahlen |
 | `data/` | Datendateien für das Backend, nicht im Git |
 | `docs/` | API-Vertrag ([`docs/api.md`](docs/api.md)), Datenmodell, Spezifikation |
 
@@ -56,28 +56,16 @@ pytest
 
 ## Kernfunktionen
 
-1. **Interaktive Potenzialkarte Pforzheim (Leaflet)**
-   - **24 reale Pforzheimer Potenzialflächen** in 5 Demo-Quartieren (*Innenstadt/Enzaue*, *Nordstadt/Wartberg*, *Oststadt/Enzauenpark*, *Weststadt/Brötzingen/Wilferdinger Höhe*, *Südweststadt/Buckenberg*).
-   - **Farbkodierung nach Eignung**:
-     - **Dunkelgrün**: Sehr geeignet (Score 75–100)
-     - **Hellgrün**: Geeignet (Score 55–74)
-     - **Gelb**: Eingeschränkt geeignet (Score 35–54, z. B. HQ100 oder Steilhang)
-     - **Grau**: Ungeeignet / Restriktion (Score < 35, z. B. Altlastenverdacht oder bereits abgekoppelt)
-     - **Blau**: Starkregen-Hotspots & Hauptfließwege (zuschaltbarer Layer)
-   - **Thermischer Hitze-Insel-Layer (+°C)** sowie umschaltbare Basiskarten (*Analyse-Dunkel*, *Stadtkarte OSM*, *Topografie & Hanglagen*).
+1. **Score-Heatmap je Quadratmeter**: Kachel-Ebene auf der Leaflet-Karte (Zoom ab 13), Farbskala von Rot (wenig Rückhalt) bis Dunkelgrün (viel Rückhalt), Zellen ohne Score grau. Die Ebene lässt sich ein- und ausblenden.
+2. **Regenmenge 30–80 mm**: Der Schieberegler wechselt zwischen den sechs Tagesregenmengen 30, 40, 50, 60, 70 und 80 mm. Je mehr Regen, desto kleiner der Score.
+3. **Score-Filter**: Der Bereichsfilter blendet Zellen außerhalb der gewählten Score-Spanne aus.
+4. **Zelldetails per Klick**: Score mit Einordnung, zurückgehaltene und abfließende Liter je m², Aussagekraft (Bestätigt, Nur Luftbild, Annahme, Widerspruch), getroffene Annahmen, Flächenklasse, Bodengruppe und Hangneigung.
+5. **Regionsumrisse**: Die 8 Regionen des Rechengebiets sind als Umrisse eingezeichnet, die Karte öffnet auf diesem Gebiet.
+6. **Statistikleiste**: Zellen mit und ohne Score, mittlerer Score und Score-Spanne für die gewählte Regenmenge.
 
-2. **Transparente Scoring-Engine**
-   $$\text{Mehrwert} = \text{Wasseranfall} \times \text{Aufnahmepotenzial} \times \text{Verfügbarkeit} \times (1 - \text{Restriktion}) \times (1 + \text{Betroffenheit}) \times (1 - \text{bereits abgekoppelt})$$
+Suche und Export sind in der Oberfläche vorgesehen, aber noch nicht umgesetzt.
 
-3. **Arup „Global Sponge Cities Snapshot“ Hydrologie**
-   - **Blau-Grün-Grau-Bilanz** je Quartier mit Live-Simulation bei Aktivierung von Maßnahmen.
-   - **Hydrological Soil Groups (A, B, C, D)** gekoppelt mit LGRB-Infiltrationsraten (mm/h) und Grundwasserflurabständen.
-   - **USDA-SCS Curve Number (CN)** Abfluss- und Rückhalteberechnung für 3 Starkregenszenarien (*Selten: 38 mm*, *Außergewöhnlich / Arup Benchmark: 50 mm*, *Extrem: 85 mm*).
+## Was der Score bedeutet
 
-4. **Erklärbare KI-Schicht & Fördergenerator**
-   - Natürlichsprachliche Suche und vordefinierte KI-Fragen (Top-Entsiegelungsflächen, Schulhöfe, Restriktionsbegründung, Maßnahmenlogik).
-   - Automatischer **Förderantrag- & Beschlussvorlagen-Generator** inkl. Check für das Pforzheimer Förderprogramm **„Grün mal drei“** und Ersparnisrechner für die Niederschlagswassergebühr.
-
-5. **Export**
-   - **PDF / Druck-Steckbrief**, **CSV** (für Excel/Fachämter) und **GeoJSON** (für QGIS/ArcGIS).
+Der Schwamm Score gibt an, welchen Anteil eines Tagesregens ein Quadratmeter zurückhält (in %). Berechnet wird er mit dem SCS-Curve-Number-Verfahren aus Flächenklasse, Bodengruppe und Hangneigung. Auch Asphalt erreicht noch etwa 11 %, weil Mulden und Fugen etwas Wasser halten. Der Wert ist eine **Bestandsaufnahme, kein Planungswert**. Das Rechengebiet sind 8 Regionen in Pforzheim, außerhalb gibt es keine Werte. Zellen mit widersprüchlichen Quellen und überwiegend fließendes Wasser erhalten keinen Score.
 

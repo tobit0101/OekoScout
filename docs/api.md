@@ -1,8 +1,6 @@
 # Schwammstadt-Score Pforzheim – REST-API v1
 
-Schnittstelle für das Karten-Frontend. Sie liefert den Sponge Score je Quadratmeter für eine Koordinate, die Umrisse der 8 Regionen des Rechengebiets und die Kennzahlen zum Datensatz.
-
-Die Raster-Kacheln (XYZ) für die flächige Darstellung kommen **nicht** von dieser API. Sie werden separat statisch ausgeliefert.
+Schnittstelle für das Karten-Frontend. Sie liefert den Sponge Score je Quadratmeter für eine Koordinate, die Umrisse der 8 Regionen des Rechengebiets, die Kennzahlen zum Datensatz und die Heatmap als Raster-Kacheln (XYZ, PNG).
 
 ## Grundlagen
 
@@ -230,6 +228,60 @@ Liefert die Kennzahlen zum Datensatz, z. B. für Legende, Skala oder ein Infopan
 **503**, wenn die Datei fehlt:
 ```json
 { "detail": "Kennzahlen nicht lesbar" }
+```
+
+---
+
+## `GET /tiles/{regen}/{z}/{x}/{y}.png`
+
+Liefert eine Heatmap-Kachel (256 × 256 px, PNG mit Alpha) im XYZ-Schema (Web Mercator, EPSG:3857, y von oben), wie es `L.tileLayer` und OpenStreetMap verwenden.
+
+| Parameter | Ort | Typ | Pflicht | Bereich |
+|---|---|---|---|---|
+| `regen` | Pfad | int | ja | 30, 40, 50, 60, 70, 80 (mm) |
+| `z` | Pfad | int | ja | 0 … 22 |
+| `x`, `y` | Pfad | int | ja | 0 … 2^z − 1 |
+| `score_min` | Query | float | nein | 0 … 100, Standard 0 |
+| `score_max` | Query | float | nein | 0 … 100, Standard 100, muss ≥ `score_min` sein |
+
+**Verhalten**
+
+- Zellen mit Score im Bereich `score_min` … `score_max` erscheinen in der Farbe der Skala unten, deckend (Alpha 255).
+- Zellen mit Score außerhalb des Bereichs sind transparent.
+- Zellen ohne Score (`WIDERSPRUCH`, Fließgewässer) sind immer grau (`#9E9E9E`), unabhängig vom Filter.
+- Pixel ohne Zelle sind transparent.
+- Bis Zoom 16 (1 Pixel ≥ 1 Zelle) wird je Pixel der Mittelwert der Scores aller bewerteten Zellen gezeichnet, der Filter gilt für diesen Mittelwert. Ein Pixel ohne bewertete Zelle ist grau. Ab Zoom 17 wird jede Zelle als Quadrat ihrer Fläche gezeichnet, ohne Lücken.
+- Unter Zoom 13 und außerhalb des Rechengebiets liefert die API eine vollständig transparente Kachel. Das Frontend sollte `minZoom: 13` setzen.
+- Antwortheader: `Content-Type: image/png`, `Cache-Control: public, max-age=86400`. Gerenderte Kacheln werden zusätzlich im Server-Speicher gehalten.
+
+**Farbskala** (lineare Interpolation in RGB, unter 11 % und über 85 % wird die erste bzw. letzte Farbe verwendet)
+
+| Score % | Farbe |
+|---|---|
+| 11 | `#D73027` |
+| 25 | `#F46D43` |
+| 40 | `#FDAE61` |
+| 50 | `#FEE08B` |
+| 60 | `#A6D96A` |
+| 72 | `#66BD63` |
+| 85 | `#1A9850` |
+| kein Score | `#9E9E9E` |
+
+```bash
+curl -o kachel.png "http://localhost:8001/api/v1/tiles/50/17/68711/45061.png?score_min=0&score_max=100"
+```
+
+### Leaflet
+
+```js
+L.tileLayer('/api/v1/tiles/50/{z}/{x}/{y}.png?score_min=0&score_max=100', { minZoom: 13, maxZoom: 20, opacity: 0.75 }).addTo(map);
+```
+
+**422**, wenn `regen` nicht in der Liste steht, `x` oder `y` außerhalb des Bereichs für `z` liegen, `z` > 22 ist, ein Score-Parameter nicht in 0 … 100 liegt oder `score_min` > `score_max` ist.
+
+**503**, wenn die Zelldaten nicht lesbar sind:
+```json
+{ "detail": "Zelldaten nicht lesbar" }
 ```
 
 ---
