@@ -2,6 +2,7 @@ import logging
 import os
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 import duckdb
 from fastapi import APIRouter, HTTPException, Query
@@ -46,11 +47,13 @@ def load_stats() -> StatsResponse:
     )
 
 
-def fetch_cell_row(sql: str, parameters: dict[str, float] | None = None) -> tuple | None:
+def fetch_one(
+    sql: str, parameters: dict[str, float] | None = None
+) -> tuple[Any, ...] | None:
     try:
         return connection().cursor().execute(sql, parameters).fetchone()
     except (duckdb.Error, OSError) as error:
-        logger.warning("Cell data not readable: %s", error)
+        logger.warning("Parquet query failed: %s", error)
         raise HTTPException(status_code=503, detail="Zelldaten nicht lesbar") from error
 
 
@@ -60,7 +63,9 @@ def fetch_cell_row(sql: str, parameters: dict[str, float] | None = None) -> tupl
     responses={503: {"model": ErrorResponse}},
 )
 def health() -> HealthResponse:
-    row = fetch_cell_row("SELECT count(*) FROM zellen")
+    row = fetch_one("SELECT count(*) FROM zellen")
+    if row is None:
+        raise HTTPException(status_code=503, detail="Zelldaten nicht lesbar")
     return HealthResponse(status="ok", zellen=row[0])
 
 
@@ -73,7 +78,7 @@ def cell(
     lat: float = Query(ge=-90, le=90),
     lng: float = Query(ge=-180, le=180),
 ) -> CellResponse:
-    row = fetch_cell_row(CELL_SQL, {"lat": lat, "lng": lng})
+    row = fetch_one(CELL_SQL, {"lat": lat, "lng": lng})
     if row is None:
         raise HTTPException(
             status_code=404, detail="Keine Zelle im Rechengebiet an dieser Koordinate"
