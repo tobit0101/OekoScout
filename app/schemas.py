@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -36,3 +36,26 @@ class StatsResponse(BaseModel):
     score_je_regenmenge: dict[str, ScoreSummary]
     je_region: dict[str, int]
     aussagekraft: dict[str, int]
+
+
+class RegionProperties(BaseModel):
+    id: int
+    flaeche_m2: int
+    bbox_epsg25832: list[int]
+
+
+class RegionGeometry(BaseModel):
+    type: Literal["Polygon", "MultiPolygon"]
+    coordinates: list[Any]
+
+
+class RegionFeature(BaseModel):
+    type: Literal["Feature"]
+    id: int
+    properties: RegionProperties
+    geometry: RegionGeometry
+
+
+class RegionCollection(BaseModel):
+    type: Literal["FeatureCollection"]
+    features: list[RegionFeature]

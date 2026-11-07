@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from functools import lru_cache
@@ -6,8 +7,15 @@ from typing import Any
 
 import duckdb
 from fastapi import APIRouter, HTTPException, Query
+from pyproj import Transformer
 
-from app.schemas import CellResponse, ErrorResponse, HealthResponse, StatsResponse
+from app.schemas import (
+    CellResponse,
+    ErrorResponse,
+    HealthResponse,
+    RegionCollection,
+    StatsResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +52,34 @@ def connection() -> duckdb.DuckDBPyConnection:
 def load_stats() -> StatsResponse:
     return StatsResponse.model_validate_json(
         (data_dir() / "kennzahlen.json").read_text(encoding="utf-8")
+    )
+
+
+def to_wgs84(coordinates: Any, transformer: Transformer) -> Any:
+    if not isinstance(coordinates[0], list):
+        lng, lat = transformer.transform(coordinates[0], coordinates[1])
+        return [round(lng, 7), round(lat, 7)]
+    return [to_wgs84(item, transformer) for item in coordinates]
+
+
+@lru_cache(maxsize=1)
+def load_regions() -> RegionCollection:
+    raw = json.loads((data_dir() / "regionen.geojson").read_text(encoding="utf-8"))
+    transformer = Transformer.from_crs(25832, 4326, always_xy=True)
+    features = [
+        {
+            "type": "Feature",
+            "id": feature["properties"]["id"],
+            "properties": feature["properties"],
+            "geometry": {
+                "type": feature["geometry"]["type"],
+                "coordinates": to_wgs84(feature["geometry"]["coordinates"], transformer),
+            },
+        }
+        for feature in raw["features"]
+    ]
+    return RegionCollection.model_validate(
+        {"type": "FeatureCollection", "features": features}
     )
 
 
@@ -110,3 +146,16 @@ def stats() -> StatsResponse:
     except (OSError, ValueError) as error:
         logger.warning("Stats not readable: %s", error)
         raise HTTPException(status_code=503, detail="Kennzahlen nicht lesbar") from error
+
+
+@router.get(
+    "/regions",
+    response_model=RegionCollection,
+    responses={503: {"model": ErrorResponse}},
+)
+def regions() -> RegionCollection:
+    try:
+        return load_regions()
+    except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
+        logger.warning("Regions not readable: %s", error)
+        raise HTTPException(status_code=503, detail="Regionen nicht lesbar") from error
