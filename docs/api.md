@@ -8,7 +8,7 @@ Schnittstelle für das Karten-Frontend. Sie liefert den Sponge Score je Quadratm
 |---|---|
 | Basis-URL lokal | `http://localhost:8001/api/v1` |
 | Format | JSON, UTF-8 |
-| Methoden | nur `GET` |
+| Methoden | `GET`, nur `/area` ist `POST` |
 | CORS | offen (`Access-Control-Allow-Origin: *`) |
 | Authentifizierung | keine |
 | Koordinaten | WGS84 (EPSG:4326), Dezimalgrad |
@@ -286,10 +286,84 @@ L.tileLayer('/api/v1/tiles/50/{z}/{x}/{y}.png?score_min=0&score_max=100', { minZ
 
 ---
 
+## `POST /area`
+
+Fasst alle Zellen innerhalb einer gezeichneten Fläche zusammen, z. B. für ein Infopanel zu einem Kreis, Rechteck oder Polygon auf der Karte. Das Frontend wandelt Kreise (64 Eckpunkte) und Rechtecke vorher in ein Polygon um.
+
+**Request** (JSON, GeoJSON-Polygon in WGS84, `[lng, lat]`)
+```json
+{
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[[8.7201, 48.9125], [8.7210, 48.9125], [8.7210, 48.9130], [8.7201, 48.9130], [8.7201, 48.9125]]]
+  }
+}
+```
+
+- Nur der äußere Ring ist erlaubt, Löcher werden abgelehnt.
+- Der Ring muss geschlossen sein (erste = letzte Position) und mindestens 4 Positionen haben.
+- Höchstens 1000 Eckpunkte und höchstens 1.000.000 m² (1 km²) Fläche.
+- Selbstüberschneidende Polygone werden angenommen, überlappende Teile zählen nach der Even-Odd-Regel.
+- Eine Zelle gehört zur Fläche, wenn ihr Mittelpunkt im Polygon liegt. Das Polygon wird dazu nach EPSG:25832 transformiert.
+
+```bash
+curl -X POST "http://localhost:8001/api/v1/area" \
+  -H 'Content-Type: application/json' \
+  -d '{"geometry":{"type":"Polygon","coordinates":[[[8.7201,48.9125],[8.7210,48.9125],[8.7210,48.9130],[8.7201,48.9130],[8.7201,48.9125]]]}}'
+```
+
+**200**
+```json
+{
+  "flaeche_m2": 3840.2,
+  "zellen": 3790,
+  "zellen_mit_score": 3312,
+  "score_mittel": { "30": 71.2, "40": 64.0, "50": 58.1, "60": 53.0, "70": 48.7, "80": 45.0 },
+  "rueckhalt_liter": { "30": 70742.4, "40": 84787.2, "50": 96213.6, "60": 105321.6, "70": 112791.2, "80": 119232.0 },
+  "abfluss_liter": { "30": 28617.6, "40": 47692.8, "50": 69386.4, "60": 93398.4, "70": 119048.8, "80": 145728.0 },
+  "aussagekraft": { "BESTAETIGT": 1200, "NUR_LUFTBILD": 900, "ANNAHME": 1212, "WIDERSPRUCH": 478 },
+  "klassen": { "DACH": 800, "VERSIEGELT": 1000, "WIESE": 900, "BAUM": 1000, "GRUENDACH": 0, "STILLGEWAESSER": 0, "FLIESSGEWAESSER": 90 }
+}
+```
+
+| Feld | Typ | Bedeutung |
+|---|---|---|
+| `flaeche_m2` | float | Fläche des Polygons in EPSG:25832, 1 Nachkommastelle |
+| `zellen` | int | Zellen innerhalb. Außerhalb der 8 Regionen gibt es keine Zellen, daher kann `zellen` kleiner als `flaeche_m2` oder 0 sein |
+| `zellen_mit_score` | int | Zellen mit Score (für alle Regenmengen gleich) |
+| `score_mittel` | object | Schlüssel `"30"`…`"80"`, Mittelwert des Scores in % über die bewerteten Zellen, **`null`**, wenn keine Zelle bewertet ist |
+| `rueckhalt_liter` | object | Schlüssel `"30"`…`"80"`, Summe über die bewerteten Zellen von (Regenmenge − Abfluss) in Litern (1 mm auf 1 m² = 1 l), 0 wenn keine |
+| `abfluss_liter` | object | Schlüssel `"30"`…`"80"`, Summe des Abflusses über die bewerteten Zellen in Litern, 0 wenn keine |
+| `aussagekraft` | object | Anzahl Zellen je Wert, alle vier Schlüssel immer vorhanden |
+| `klassen` | object | Anzahl Zellen je Wert, alle sieben Schlüssel immer vorhanden |
+
+Alle Zahlen sind auf 1 Nachkommastelle gerundet. Mittelwerte und Liter beziehen sich nur auf bewertete Zellen, die Zählungen in `aussagekraft` und `klassen` auf alle Zellen innerhalb.
+
+**422**, wenn die Geometrie ungültig ist. `detail` ist dann ein String:
+
+| `detail` | Ursache |
+|---|---|
+| `Nur ein äußerer Ring erlaubt` | Löcher (innere Ringe) oder kein Ring |
+| `Ring braucht mindestens 4 Positionen` | Ring zu kurz |
+| `Ring ist nicht geschlossen` | erste und letzte Position unterscheiden sich |
+| `Zu viele Eckpunkte` | mehr als 1000 Eckpunkte |
+| `Ungültige Koordinaten` | nicht endliche Werte |
+| `Fläche zu groß (max. 1 km²)` | Fläche über 1.000.000 m² |
+| `Ausdehnung zu groß (max. 2,5 km)` | Umgebendes Rechteck länger als 2,5 km |
+
+Ein falscher `type` (z. B. `Point`) oder ein fehlerhafter Body liefert das FastAPI-Standardformat (siehe Fehlerformat).
+
+**503**, wenn die Zelldaten nicht lesbar sind:
+```json
+{ "detail": "Zelldaten nicht lesbar" }
+```
+
+---
+
 ## Fehlerformat
 
 | Status | Body |
 |---|---|
 | 404 | `{ "detail": string }` |
-| 422 | `{ "detail": [ { "type", "loc", "msg", "input" } ] }` |
+| 422 | `{ "detail": [ { "type", "loc", "msg", "input" } ] }`, bei `/area` bei ungültiger Geometrie `{ "detail": string }` |
 | 503 | `{ "detail": string }` |

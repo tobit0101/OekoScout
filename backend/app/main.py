@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import connection, load_regions, load_stats, router
+from app.area import router as area_router
 from app.tiles import data_extent
 from app.tiles import router as tiles_router
 
@@ -35,8 +36,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 app.include_router(router)
+app.include_router(area_router)
 app.include_router(tiles_router)

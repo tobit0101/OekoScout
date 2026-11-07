@@ -24,6 +24,26 @@ class CellResponse(BaseModel):
     abfluss_mm: dict[str, float | None]
 
 
+class PolygonGeometry(BaseModel):
+    type: Literal["Polygon"]
+    coordinates: list[list[tuple[float, float]]]
+
+
+class AreaRequest(BaseModel):
+    geometry: PolygonGeometry
+
+
+class AreaResponse(BaseModel):
+    flaeche_m2: float
+    zellen: int
+    zellen_mit_score: int
+    score_mittel: dict[str, float | None]
+    rueckhalt_liter: dict[str, float]
+    abfluss_liter: dict[str, float]
+    aussagekraft: dict[str, int]
+    klassen: dict[str, int]
+
+
 class ScoreSummary(BaseModel):
     min: float
     mittel: float

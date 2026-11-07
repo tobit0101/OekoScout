@@ -1,3 +1,4 @@
+import type { AreaSelection } from '../hooks/useAreaSelection';
 import type { RainKey } from '../types/api';
 
 export interface FocusTarget {
@@ -13,4 +14,5 @@ export interface SpongeMapProps {
   scoreMax: number;
   heatmapVisible: boolean;
   focusTarget?: FocusTarget | null;
+  area?: AreaSelection;
 }

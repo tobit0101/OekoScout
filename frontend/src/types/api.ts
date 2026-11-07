@@ -74,3 +74,23 @@ export interface HealthResponse {
   status: 'ok';
   zellen: number;
 }
+
+export interface AreaGeometry {
+  type: 'Polygon';
+  coordinates: number[][][];
+}
+
+export interface AreaRequest {
+  geometry: AreaGeometry;
+}
+
+export interface AreaStatsResponse {
+  flaeche_m2: number;
+  zellen: number;
+  zellen_mit_score: number;
+  score_mittel: Record<RainKey, number | null>;
+  rueckhalt_liter: Record<RainKey, number>;
+  abfluss_liter: Record<RainKey, number>;
+  aussagekraft: Record<Aussagekraft, number>;
+  klassen: Record<Klasse, number>;
+}

@@ -4,6 +4,8 @@ import { RAIN_STEPS } from '../labels';
 import { COLORS, SIDEBAR_WIDTH } from '../theme';
 import type { RainKey, ScoreStats } from '../types/api';
 import { formatDecimal } from '../utils/format';
+import type { AreaSelection } from '../hooks/useAreaSelection';
+import { AreaPanel } from './area/AreaPanel';
 import { Legend } from './Legend';
 import { SidebarCollapseButton } from './sidebar/SidebarCollapseButton';
 import { SidebarRail } from './sidebar/SidebarRail';
@@ -31,6 +33,7 @@ interface SidebarProps {
   onScoreMinChange: (value: number) => void;
   onScoreMaxChange: (value: number) => void;
   onRainChange: (value: RainKey) => void;
+  area?: AreaSelection;
 }
 
 function thumbOffset(percent: number): string {
@@ -50,7 +53,7 @@ function dispatchMapResize(): void {
 }
 
 export function Sidebar(props: SidebarProps) {
-  const { scoreMin, scoreMax, rainKey, rainStats, collapsed, compact, onScoreMinChange, onScoreMaxChange, onRainChange, onCollapsedChange } = props;
+  const { scoreMin, scoreMax, rainKey, rainStats, collapsed, compact, onScoreMinChange, onScoreMaxChange, onRainChange, onCollapsedChange, area } = props;
   const rainIndex = RAIN_STEPS.indexOf(rainKey);
   const lastIndex = RAIN_STEPS.length - 1;
   const meanRetained = rainStats ? (Number(rainKey) * rainStats.mittel) / 100 : null;
@@ -219,6 +222,16 @@ export function Sidebar(props: SidebarProps) {
             </div>
           )}
         </section>
+
+        {area?.shape && (
+          <>
+            <Separator />
+            <section aria-labelledby="area-title">
+              <SectionTitle id="area-title">Markierte Fläche</SectionTitle>
+              <AreaPanel shape={area.shape} statsState={area.statsState} rainKey={rainKey} onClear={area.clear} />
+            </section>
+          </>
+        )}
       </div>
 
       <div

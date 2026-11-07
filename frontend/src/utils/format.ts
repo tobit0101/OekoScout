@@ -12,3 +12,14 @@ export function formatDecimal(value: number): string {
 export function formatInteger(value: number): string {
   return INTEGER.format(value);
 }
+
+const MILLION = 1_000_000;
+
+export function formatArea(squareMeters: number): string {
+  return `${formatInteger(Math.round(squareMeters))} m²`;
+}
+
+export function formatLiters(liters: number): string {
+  if (liters >= MILLION) return `${formatDecimal(liters / MILLION)} Mio. L`;
+  return `${formatInteger(Math.round(liters))} L`;
+}

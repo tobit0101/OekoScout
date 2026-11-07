@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { InfoBar } from './components/InfoBar';
 import { Legend } from './components/Legend';
 import { NavBar } from './components/NavBar';
@@ -6,6 +6,7 @@ import { Sidebar, SectionTitle } from './components/Sidebar';
 import { GoogleSpongeMap } from './components/GoogleSpongeMap';
 import type { FocusTarget } from './components/mapTypes';
 import { SpongeMap } from './components/SpongeMap';
+import { useAreaSelection } from './hooks/useAreaSelection';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { usePersistentBoolean } from './hooks/usePersistentState';
 import { useStats } from './hooks/useStats';
@@ -30,9 +31,17 @@ export function App() {
   const [rainKey, setRainKey] = useState<RainKey>(DEFAULT_RAIN);
   const [searchTarget, setSearchTarget] = useState<FocusTarget | null>(null);
   const statsState = useStats();
+  const area = useAreaSelection();
+  const handledFinishRef = useRef(0);
 
   const rainStats = statsState.status === 'ready' ? statsState.stats.score_je_regenmenge[`${rainKey}mm`] : undefined;
   const drawerShown = compact && drawerOpen;
+
+  useEffect(() => {
+    if (area.finishNonce === handledFinishRef.current) return;
+    handledFinishRef.current = area.finishNonce;
+    if (!compact) setDesktopCollapsed(false);
+  }, [area.finishNonce, compact, setDesktopCollapsed]);
 
   useEffect(() => {
     if (!drawerShown) return;
@@ -73,6 +82,7 @@ export function App() {
           onScoreMinChange={setScoreMin}
           onScoreMaxChange={setScoreMax}
           onRainChange={setRainKey}
+          area={area}
         />
 
         {compact && !collapsed && (
@@ -84,7 +94,7 @@ export function App() {
         )}
 
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
-          <MapView rainKey={rainKey} scoreMin={scoreMin} scoreMax={scoreMax} heatmapVisible={heatmapVisible} focusTarget={searchTarget} />
+          <MapView rainKey={rainKey} scoreMin={scoreMin} scoreMax={scoreMax} heatmapVisible={heatmapVisible} focusTarget={searchTarget} area={area} />
 
           {collapsed && (
             <div

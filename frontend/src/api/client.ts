@@ -1,4 +1,7 @@
 import type {
+  AreaGeometry,
+  AreaRequest,
+  AreaStatsResponse,
   CellResponse,
   RegionsResponse,
   StatsResponse,
@@ -32,5 +35,33 @@ export async function fetchRegions(): Promise<RegionsResponse> {
 export async function fetchStats(): Promise<StatsResponse> {
   const res = await fetch(`${BASE}/stats`);
   if (!res.ok) throw new Error(`Stats fetch failed: ${res.status}`);
+  return res.json();
+}
+
+export class AreaInputError extends Error {}
+
+const UNPROCESSABLE_ENTITY = 422;
+const INVALID_AREA_MESSAGE = 'Ungültige Fläche';
+
+async function readDetail(res: Response): Promise<string> {
+  try {
+    const body: unknown = await res.json();
+    const detail = (body as { detail?: unknown }).detail;
+    return typeof detail === 'string' ? detail : INVALID_AREA_MESSAGE;
+  } catch {
+    return INVALID_AREA_MESSAGE;
+  }
+}
+
+export async function fetchAreaStats(geometry: AreaGeometry, signal?: AbortSignal): Promise<AreaStatsResponse> {
+  const body: AreaRequest = { geometry };
+  const res = await fetch(`${BASE}/area`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (res.status === UNPROCESSABLE_ENTITY) throw new AreaInputError(await readDetail(res));
+  if (!res.ok) throw new Error(`Area fetch failed: ${res.status}`);
   return res.json();
 }
