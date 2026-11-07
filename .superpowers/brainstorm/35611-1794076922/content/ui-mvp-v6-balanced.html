@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponge MVP – Refined</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f2f5; color: #1a2332; font-family: 'Inter', sans-serif; padding: 28px; }
+  h1 { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #9ba8b6; margin-bottom: 6px; }
+  .sub { font-size: 12px; color: #9ba8b6; margin-bottom: 28px; }
+
+  .app { max-width: 900px; background: #fff; border: 1px solid #e1e6ec; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,.08); }
+
+  /* NAV */
+  .nav { height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid #e9edf1; background: #fff; }
+  .logo { font-size: 15px; font-weight: 700; color: #2d6a4f; padding-right: 16px; border-right: 1px solid #e9edf1; margin-right: 4px; }
+  .search-bar { flex: 1; max-width: 400px; display: flex; align-items: center; gap: 8px; background: #f7f9fb; border: 1px solid #e1e6ec; border-radius: 6px; padding: 8px 12px; }
+  .search-bar input { border: none; background: transparent; font-size: 12px; font-family: 'Inter', sans-serif; color: #1a2332; outline: none; width: 100%; }
+  .search-bar input::placeholder { color: #a8b4c0; }
+  .nav-right { display: flex; gap: 6px; margin-left: auto; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid #e1e6ec; background: #fff; color: #64748b; font-family: 'Inter', sans-serif; transition: all .12s; }
+  .btn:hover { background: #f7f9fb; }
+  .btn.active { background: #f4f8f5; border-color: #b7d5c2; color: #2d6a4f; }
+  .btn.primary { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+  .btn.primary:hover { background: #245a42; }
+
+  /* LAYOUT */
+  .body { display: grid; grid-template-columns: 258px 1fr; min-height: 500px; }
+
+  /* SIDEBAR */
+  .sidebar { border-right: 1px solid #e9edf1; padding: 16px; display: flex; flex-direction: column; gap: 16px; background: #fafbfc; }
+  .s-title { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #a8b4c0; margin-bottom: 4px; }
+  .s-sep { height: 1px; background: #e9edf1; }
+
+  /* sliders */
+  .sl-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sl-lbl { font-size: 12px; color: #64748b; }
+  .sl-val { font-size: 11px; font-weight: 600; color: #2d6a4f; background: #f4f8f5; border: 1px solid #b7d5c2; border-radius: 4px; padding: 2px 8px; }
+  .sl-track { position: relative; height: 4px; background: #e1e6ec; border-radius: 99px; margin-bottom: 7px; }
+  .sl-fill { position: absolute; height: 100%; border-radius: 99px; }
+  .sl-thumb { position: absolute; width: 14px; height: 14px; background: #fff; border: 2px solid; border-radius: 50%; top: 50%; transform: translate(-50%,-50%); box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: grab; }
+  .sl-marks { display: flex; justify-content: space-between; font-size: 9px; color: #c2cad4; }
+
+  /* toggles */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+  .toggle-lbl { font-size: 12px; color: #475569; }
+  .tog { width: 32px; height: 18px; border-radius: 99px; position: relative; cursor: pointer; transition: background .15s; flex-shrink: 0; }
+  .tog::after { content:''; position:absolute; width:12px; height:12px; background:#fff; border-radius:50%; top:3px; left:3px; transition:left .15s; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+  .tog.on::after { left:17px; }
+
+  /* MAP */
+  .map-area { position: relative; overflow: hidden; }
+
+  /* Toolbar */
+  .map-tools { position: absolute; top: 12px; left: 12px; display: flex; gap: 4px; z-index: 2; }
+  .mt { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #e1e6ec; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 500; color: #64748b; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.07); font-family: 'Inter', sans-serif; transition: all .12s; }
+  .mt:hover { background: #f7f9fb; }
+  .mt.active { background: #f4f8f5; border-color: #b7d5c2; color: #2d6a4f; }
+
+  /* Zoom */
+  .zoom { position: absolute; top: 12px; right: 12px; z-index: 2; display: flex; flex-direction: column; background: #fff; border: 1px solid #e1e6ec; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  .zb { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 17px; color: #64748b; background: transparent; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: background .1s; }
+  .zb:hover { background: #f7f9fb; color: #2d6a4f; }
+  .zsep { height: 1px; background: #e9edf1; }
+
+  /* Score card */
+  .score-card { position: absolute; bottom: 16px; right: 16px; z-index: 2; background: #fff; border: 1px solid #e1e6ec; border-radius: 10px; padding: 16px; width: 214px; box-shadow: 0 4px 20px rgba(0,0,0,.09); }
+  .sc-eyebrow { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #a8b4c0; font-weight: 600; margin-bottom: 5px; }
+  .sc-score { display: flex; align-items: baseline; gap: 2px; margin-bottom: 8px; }
+  .sc-num { font-size: 42px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
+  .sc-pct { font-size: 17px; font-weight: 600; }
+  .sc-bar-bg { height: 4px; background: #f0f2f5; border-radius: 99px; margin-bottom: 10px; }
+  .sc-bar { height: 100%; border-radius: 99px; }
+  .sc-water { display: flex; align-items: flex-start; gap: 7px; padding: 8px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; line-height: 1.4; }
+  .sc-sep { height: 1px; background: #f0f2f5; margin: 9px 0; }
+  .sc-row { display: flex; justify-content: space-between; font-size: 11px; margin-top: 3px; }
+  .sc-k { color: #a8b4c0; }
+  .sc-v { color: #475569; font-weight: 500; }
+
+  /* INFO BAR */
+  .info-bar { border-top: 1px solid #e9edf1; background: #fafbfc; display: flex; align-items: center; gap: 14px; padding: 9px 16px; font-size: 11px; color: #a8b4c0; }
+  .ib-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .ib-sep { width: 1px; height: 16px; background: #e9edf1; }
+  .ib-val { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Sponge MVP</h1>
+<p class="sub">Schwammstadt-Potenzialkarte · Stadtplaner · Bauträger</p>
+
+<div class="app">
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="logo">Sponge</div>
+    <div class="search-bar">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a8b4c0" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input placeholder="Adresse oder Ort suchen...">
+    </div>
+    <div class="nav-right">
+      <button class="btn active">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter
+      </button>
+      <button class="btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Heatmap
+      </button>
+      <button class="btn primary">Export</button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <div>
+        <div class="s-title">Score Filter</div>
+        <div class="sl-head">
+          <span class="sl-lbl">Sponge Score</span>
+          <span class="sl-val" style="color:#2d6a4f;border-color:#b7d5c2;background:#f4f8f5;">0 – 100 %</span>
+        </div>
+        <div class="sl-track">
+          <div class="sl-fill" style="background:#2d6a4f;left:0;width:100%;"></div>
+          <div class="sl-thumb" style="left:0%;border-color:#2d6a4f;"></div>
+          <div class="sl-thumb" style="left:100%;border-color:#2d6a4f;"></div>
+        </div>
+        <div class="sl-marks"><span>0 %</span><span>50 %</span><span>100 %</span></div>
+      </div>
+
+      <div class="s-sep"></div>
+
+      <div>
+        <div class="s-title">Regenfall</div>
+        <div class="sl-head">
+          <span class="sl-lbl">Niederschlag</span>
+          <span class="sl-val" style="color:#0369a1;border-color:#bae6fd;background:#f0f9ff;">50 mm</span>
+        </div>
+        <div class="sl-track">
+          <div class="sl-fill" style="background:#0369a1;left:0;width:58%;"></div>
+          <div class="sl-thumb" style="left:58%;border-color:#0369a1;"></div>
+        </div>
+        <div class="sl-marks"><span>10 mm</span><span>50 mm</span><span>85 mm</span></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;font-size:11px;color:#0369a1;margin-top:8px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          Fläche hält <strong style="margin:0 2px;">34 L/m²</strong> zurück
+        </div>
+      </div>
+
+      <div class="s-sep"></div>
+
+      <div>
+        <div class="s-title">Annahmen</div>
+        <div class="toggle-row">
+          <span class="toggle-lbl">Boden ohne Daten</span>
+          <div class="tog on" style="background:#2d6a4f;"></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-lbl">Gründach Beiwert 0.4</span>
+          <div class="tog" style="background:#d1d9e0;"></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-lbl">Wasser = volle Aufnahme</span>
+          <div class="tog on" style="background:#2d6a4f;"></div>
+        </div>
+        <div style="font-size:10px;color:#a8b4c0;padding-top:4px;">Annahmen beeinflussen Score</div>
+      </div>
+
+      <div class="s-sep"></div>
+
+      <div>
+        <div class="s-title">Markierte Fläche</div>
+        <div style="background:#f7f9fb;border:1px dashed #d1d9e0;border-radius:6px;padding:14px;text-align:center;font-size:11px;color:#a8b4c0;line-height:1.6;">
+          Fläche auf Karte zeichnen<br>
+          <span style="font-size:10px;">→ Flächen-Tool oben links</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAP -->
+    <div class="map-area">
+      <!-- OSM light map bg -->
+      <div style="position:absolute;inset:0;background:#eef1ea;">
+        <div style="position:absolute;left:0;top:35%;right:0;height:7px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:0;top:61%;right:0;height:4px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:26%;top:0;bottom:0;width:6px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:59%;top:0;bottom:0;width:4px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:41%;top:0;bottom:0;width:2px;background:#e2e8dc;"></div>
+        <div style="position:absolute;left:0;top:49%;right:0;height:10px;background:#c5dff5;opacity:.7;"></div>
+        <!-- blocks -->
+        <div style="position:absolute;left:5%;top:10%;width:17%;height:19%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:29%;top:8%;width:11%;height:14%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:63%;top:11%;width:21%;height:17%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:5%;top:68%;width:19%;height:21%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:43%;top:70%;width:15%;height:17%;background:#dce4d6;border-radius:2px;"></div>
+      </div>
+
+      <!-- Heatmap -->
+      <div style="position:absolute;inset:0;opacity:.5;pointer-events:none;">
+        <div style="position:absolute;left:6%;top:12%;width:11%;height:16%;background:#1b4332;border-radius:2px;"></div>
+        <div style="position:absolute;left:19%;top:9%;width:8%;height:12%;background:#2d6a4f;border-radius:2px;"></div>
+        <div style="position:absolute;left:43%;top:20%;width:14%;height:20%;background:#52b788;border-radius:2px;"></div>
+        <div style="position:absolute;left:60%;top:14%;width:10%;height:14%;background:#74c69d;border-radius:2px;"></div>
+        <div style="position:absolute;left:29%;top:39%;width:11%;height:13%;background:#ca8a04;border-radius:2px;"></div>
+        <div style="position:absolute;left:53%;top:56%;width:9%;height:11%;background:#eab308;border-radius:2px;"></div>
+        <div style="position:absolute;left:6%;top:60%;width:16%;height:20%;background:#9b1c1c;border-radius:2px;"></div>
+        <div style="position:absolute;left:68%;top:44%;width:10%;height:13%;background:#c2410c;border-radius:2px;"></div>
+        <div style="position:absolute;left:36%;top:65%;width:13%;height:13%;background:#ea580c;border-radius:2px;"></div>
+        <!-- selected -->
+        <div style="position:absolute;left:41%;top:17%;width:18%;height:26%;border:2px solid #2d6a4f;border-radius:4px;background:rgba(45,106,79,.04);box-shadow:0 0 0 1px rgba(45,106,79,.08);"></div>
+      </div>
+
+      <!-- Draw tools -->
+      <div class="map-tools">
+        <button class="mt active">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Auswahl
+        </button>
+        <button class="mt">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>Fläche zeichnen
+        </button>
+        <button class="mt">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Löschen
+        </button>
+      </div>
+
+      <!-- Zoom -->
+      <div class="zoom">
+        <button class="zb">+</button>
+        <div class="zsep"></div>
+        <button class="zb">−</button>
+      </div>
+
+      <!-- Score card — neutral, not all green -->
+      <div class="score-card">
+        <div class="sc-eyebrow">Schwammstadt-Score</div>
+        <div class="sc-score">
+          <span class="sc-num" style="color:#2d6a4f;">68.7</span>
+          <span class="sc-pct" style="color:#52b788;">%</span>
+        </div>
+        <div class="sc-bar-bg">
+          <div class="sc-bar" style="width:68.7%;background:linear-gradient(90deg,#1b4332,#52b788);"></div>
+        </div>
+        <!-- Water info — blue, not green -->
+        <div class="sc-water" style="background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          Bei 50 mm Regen hält diese Fläche <strong style="margin:0 2px;">34 Liter</strong> zurück
+        </div>
+        <div class="sc-sep"></div>
+        <div class="sc-row"><span class="sc-k">Fläche</span><span class="sc-v">1 m²</span></div>
+        <div class="sc-row"><span class="sc-k">Aussagekraft</span><span class="sc-v">Bestätigt</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO BAR -->
+  <div class="info-bar">
+    <div class="ib-dot" style="background:#52b788;"></div>
+    <span>180.000 Zellen geladen</span>
+    <div class="ib-sep"></div>
+    <span>∅ Score: <span class="ib-val" style="color:#2d6a4f;">68.7 %</span></span>
+    <div class="ib-sep"></div>
+    <span>Rückhalt: <span class="ib-val" style="color:#0369a1;">34 L / m²</span></span>
+    <div style="margin-left:auto;font-size:10px;color:#d1d9e0;">Zoom 17 · Pforzheim</div>
+  </div>
+
+</div>
+
+<!-- HEATMAP LEGEND -->
+<div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#a8b4c0;margin:32px 0 10px;">Heatmap-Legende</div>
+<div style="background:#fff;border:1px solid #e1e6ec;border-radius:8px;padding:16px;max-width:360px;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+  <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:10px;display:flex;justify-content:space-between;">
+    <span>Sponge Score</span>
+    <span style="font-weight:400;color:#a8b4c0;">Custom Heatmap</span>
+  </div>
+  <div style="height:10px;border-radius:4px;background:linear-gradient(90deg,#a50026,#f46d43,#fee08b,#d9ef8b,#74c69d,#1b4332);margin-bottom:5px;"></div>
+  <div style="display:flex;justify-content:space-between;font-size:9px;color:#a8b4c0;margin-bottom:10px;">
+    <span>11 %</span><span>30 %</span><span>50 %</span><span>75 %</span><span>85 %+</span>
+  </div>
+  <div style="height:1px;background:#f0f2f5;margin-bottom:8px;"></div>
+  <div style="font-size:10px;color:#a8b4c0;">Zellen ohne Score: transparent</div>
+</div>
+
+</body>
+</html>

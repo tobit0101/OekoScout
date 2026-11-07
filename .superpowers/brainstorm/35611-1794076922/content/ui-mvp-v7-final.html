@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponge MVP v7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* === Smart City Pforzheim Corporate Design ===
+     Primär:    #66C6DF (Cyan), #B6E591 (Lime)
+     Flächen:   #E6F4F1, #D9EFEF
+     Text dark: #1A2B2F
+     Sekundär:  #2E296B (Dunkelblau), #7C97CD, #D1EAF1
+  */
+  :root {
+    --cd-cyan:    #66C6DF;
+    --cd-lime:    #B6E591;
+    --cd-bg1:     #E6F4F1;
+    --cd-bg2:     #D9EFEF;
+    --cd-dark:    #1A2B2F;
+    --cd-navy:    #2E296B;
+    --cd-mid:     #7C97CD;
+    --cd-light:   #D1EAF1;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #eef3f5; color: var(--cd-dark); font-family: 'Inter', sans-serif; padding: 28px; }
+  h1 { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #7c97cd; margin-bottom: 6px; }
+  .sub { font-size: 12px; color: #7c97cd; margin-bottom: 28px; }
+  .lbl { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #7c97cd; margin-bottom: 10px; margin-top: 36px; }
+
+  .app { max-width: 920px; background: #fff; border: 1px solid #c9dfe8; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 16px rgba(26,43,47,.1); }
+
+  /* NAV — weißer Hintergrund, Cyan-Akzent wie CD-Website */
+  .nav { height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 3px solid #66C6DF; background: #fff; }
+  .logo { font-size: 15px; font-weight: 700; color: #66C6DF; padding-right: 16px; border-right: 1px solid #e5f4f7; margin-right: 4px; letter-spacing: .3px; }
+  .search-bar { flex: 1; max-width: 400px; display: flex; align-items: center; gap: 8px; background: #f4fafb; border: 1px solid #c9dfe8; border-radius: 6px; padding: 8px 12px; }
+  .search-bar input { border: none; background: transparent; font-size: 12px; font-family: 'Inter', sans-serif; color: var(--cd-dark); outline: none; width: 100%; }
+  .search-bar input::placeholder { color: #7c97cd; }
+  .nav-right { display: flex; gap: 6px; margin-left: auto; }
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid #c9dfe8; background: #fff; color: var(--cd-dark); font-family: 'Inter', sans-serif; transition: all .12s; }
+  .btn:hover { background: var(--cd-bg1); border-color: #66C6DF; }
+  .btn.active { background: #E6F4F1; border-color: #66C6DF; color: var(--cd-dark); font-weight: 600; }
+  .btn.export { background: #B6E591; border-color: #B6E591; color: var(--cd-dark); font-weight: 600; }
+  .btn.export:hover { background: #a3da7e; border-color: #a3da7e; }
+
+  /* LAYOUT */
+  .body { display: grid; grid-template-columns: 262px 1fr; min-height: 520px; background: #eef1ea; }
+
+  /* SIDEBAR — CD Fläche #E6F4F1 mit leichter Transparenz damit Karte sichtbar bleibt */
+  .sidebar { border-right: 1px solid #c9dfe8; padding: 16px; display: flex; flex-direction: column; gap: 16px; background: rgba(230,244,241,.96); }
+  .s-title { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cd-mid); margin-bottom: 6px; }
+  .s-sep { height: 1px; background: #c9dfe8; }
+
+  /* Slider */
+  .sl-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sl-lbl { font-size: 12px; color: var(--cd-dark); }
+  .sl-val { font-size: 11px; font-weight: 600; border-radius: 4px; padding: 2px 8px; }
+  .sl-track { position: relative; height: 4px; background: #c9dfe8; border-radius: 99px; margin-bottom: 7px; }
+  .sl-fill { position: absolute; height: 100%; border-radius: 99px; }
+  .sl-thumb { position: absolute; width: 14px; height: 14px; background: #fff; border: 2px solid; border-radius: 50%; top: 50%; transform: translate(-50%,-50%); box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: grab; }
+  .sl-marks { display: flex; justify-content: space-between; font-size: 9px; color: #7c97cd; }
+
+  /* MAP */
+  .map-area { position: relative; overflow: hidden; }
+  .map-tools { position: absolute; top: 12px; left: 12px; display: flex; gap: 4px; z-index: 2; }
+  .mt { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #c9dfe8; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 500; color: var(--cd-dark); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.07); font-family: 'Inter', sans-serif; transition: all .12s; }
+  .mt:hover { background: var(--cd-bg1); }
+  .mt.active { background: var(--cd-cyan); border-color: var(--cd-cyan); color: var(--cd-dark); font-weight: 600; }
+
+  .zoom { position: absolute; top: 12px; right: 12px; z-index: 2; display: flex; flex-direction: column; background: #fff; border: 1px solid #c9dfe8; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  .zb { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--cd-dark); background: transparent; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: background .1s; }
+  .zb:hover { background: var(--cd-bg1); }
+  .zsep { height: 1px; background: #c9dfe8; }
+
+  /* info bar */
+  .info-bar { border-top: 1px solid #c9dfe8; background: #f4fafb; display: flex; align-items: center; gap: 14px; padding: 9px 16px; font-size: 11px; color: #7c97cd; }
+  .ib-sep { width: 1px; height: 16px; background: #c9dfe8; }
+</style>
+</head>
+<body>
+
+<h1>Sponge MVP</h1>
+<p class="sub">Schwammstadt-Potenzialkarte · Stadtplaner · Bauträger · Stadt</p>
+
+<div class="app">
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="logo">Sponge</div>
+    <div class="search-bar">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c97cd" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input placeholder="Adresse oder Ort suchen...">
+    </div>
+    <div class="nav-right">
+      <button class="btn active">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter
+      </button>
+      <button class="btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Heatmap
+      </button>
+      <button class="btn export">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
+      </button>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" style="justify-content:space-between;">
+
+      <!-- oberer Teil: Filter -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Score filter -->
+        <div>
+          <div class="s-title">Score Filter</div>
+          <div class="sl-head">
+            <span class="sl-lbl">Sponge Score</span>
+            <span class="sl-val" style="color:#1A2B2F;border:1px solid #c9dfe8;background:#E6F4F1;">0 – 100 %</span>
+          </div>
+          <div class="sl-track">
+            <div class="sl-fill" style="background:#66C6DF;left:0;width:100%;"></div>
+            <div class="sl-thumb" style="left:0%;border-color:#66C6DF;"></div>
+            <div class="sl-thumb" style="left:100%;border-color:#66C6DF;"></div>
+          </div>
+          <div class="sl-marks"><span>0 %</span><span>50 %</span><span>100 %</span></div>
+        </div>
+
+        <div class="s-sep"></div>
+
+        <!-- Rain slider -->
+        <div>
+          <div class="s-title">Regenfall simulieren</div>
+          <div class="sl-head">
+            <span class="sl-lbl">Niederschlag</span>
+            <span class="sl-val" style="color:#66C6DF;border:1px solid #c9dfe8;background:#E6F4F1;">50 mm</span>
+          </div>
+          <div class="sl-track">
+            <div class="sl-fill" style="background:#66C6DF;left:0;width:57%;"></div>
+            <div class="sl-thumb" style="left:57%;border-color:#66C6DF;"></div>
+          </div>
+          <div class="sl-marks"><span>30 mm</span><span>55 mm</span><span>80 mm</span></div>
+          <div style="font-size:10px;color:#7c97cd;margin-top:4px;">Niederschlag innerhalb 24 h</div>
+          <div style="display:flex;align-items:flex-start;gap:7px;padding:8px 10px;background:#E6F4F1;border:1px solid #c9dfe8;border-radius:6px;font-size:11px;color:#2E296B;margin-top:8px;line-height:1.5;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#66C6DF" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            <span>Diese Fläche hält bei <strong>50 mm / 24 h</strong> rund <strong>34 Liter pro m²</strong> zurück</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LEGENDE — fixiert unten links, immer sichtbar -->
+      <div style="border-top:1px solid #c9dfe8;padding-top:12px;margin-top:8px;">
+        <div class="s-title" style="margin-bottom:8px;">Heatmap-Legende</div>
+        <div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#d73027 0%,#f46d43 17%,#fdae61 33%,#fee08b 50%,#a6d96a 67%,#66bd63 83%,#1a9850 100%);margin-bottom:5px;"></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:#7c97cd;">
+          <span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;margin-top:5px;">
+          <span style="color:#d73027;font-weight:600;">Schlecht</span>
+          <span style="color:#1a9850;font-weight:600;">Sehr gut</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAP -->
+    <div class="map-area">
+      <!-- OSM light bg -->
+      <div style="position:absolute;inset:0;background:#eef1ea;">
+        <div style="position:absolute;left:0;top:35%;right:0;height:7px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:0;top:61%;right:0;height:4px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:26%;top:0;bottom:0;width:6px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:59%;top:0;bottom:0;width:4px;background:#d8dfd1;"></div>
+        <div style="position:absolute;left:0;top:49%;right:0;height:10px;background:#c5dff5;opacity:.7;"></div>
+        <div style="position:absolute;left:5%;top:10%;width:17%;height:19%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:29%;top:8%;width:11%;height:14%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:63%;top:11%;width:21%;height:17%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:5%;top:68%;width:19%;height:21%;background:#dce4d6;border-radius:2px;"></div>
+        <div style="position:absolute;left:43%;top:70%;width:15%;height:17%;background:#dce4d6;border-radius:2px;"></div>
+      </div>
+
+      <!-- Heatmap cells — score-based colors, not all green -->
+      <div style="position:absolute;inset:0;opacity:.55;pointer-events:none;">
+        <!-- high score → dark green -->
+        <div style="position:absolute;left:6%;top:12%;width:11%;height:16%;background:#1b4332;border-radius:2px;"></div>
+        <div style="position:absolute;left:19%;top:9%;width:8%;height:12%;background:#2d6a4f;border-radius:2px;"></div>
+        <!-- medium-high → light green -->
+        <div style="position:absolute;left:43%;top:20%;width:14%;height:20%;background:#52b788;border-radius:2px;"></div>
+        <div style="position:absolute;left:60%;top:14%;width:10%;height:14%;background:#74c69d;border-radius:2px;"></div>
+        <!-- medium → yellow -->
+        <div style="position:absolute;left:29%;top:39%;width:11%;height:13%;background:#ca8a04;border-radius:2px;"></div>
+        <div style="position:absolute;left:53%;top:56%;width:9%;height:11%;background:#eab308;border-radius:2px;"></div>
+        <!-- low → orange/red -->
+        <div style="position:absolute;left:6%;top:60%;width:16%;height:20%;background:#9b1c1c;border-radius:2px;"></div>
+        <div style="position:absolute;left:68%;top:44%;width:10%;height:13%;background:#c2410c;border-radius:2px;"></div>
+        <div style="position:absolute;left:36%;top:65%;width:13%;height:13%;background:#ea580c;border-radius:2px;"></div>
+
+        <!-- DRAWN POLYGON — dashed blue outline, semi-transparent fill -->
+        <div style="position:absolute;left:32%;top:22%;width:22%;height:30%;
+          border:2px dashed #2563eb;
+          border-radius:4px;
+          background:rgba(37,99,235,.07);
+          box-shadow:0 0 0 1px rgba(37,99,235,.1);">
+          <!-- Polygon anchor points -->
+          <div style="position:absolute;top:-5px;left:-5px;width:9px;height:9px;background:#fff;border:2px solid #2563eb;border-radius:50%;"></div>
+          <div style="position:absolute;top:-5px;right:-5px;width:9px;height:9px;background:#fff;border:2px solid #2563eb;border-radius:50%;"></div>
+          <div style="position:absolute;bottom:-5px;left:-5px;width:9px;height:9px;background:#fff;border:2px solid #2563eb;border-radius:50%;"></div>
+          <div style="position:absolute;bottom:-5px;right:-5px;width:9px;height:9px;background:#fff;border:2px solid #2563eb;border-radius:50%;"></div>
+          <div style="position:absolute;top:-5px;left:calc(50% - 4px);width:9px;height:9px;background:#fff;border:2px solid #2563eb;border-radius:50%;"></div>
+          <!-- mid-draw label -->
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,.92);border:1px solid #e1e6ec;border-radius:5px;padding:4px 8px;font-size:10px;color:#2563eb;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.08);">
+            ≈ 2.400 m²
+          </div>
+        </div>
+      </div>
+
+      <!-- Draw toolbar -->
+      <div class="map-tools">
+        <button class="mt">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Auswahl
+        </button>
+        <button class="mt active">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>Fläche zeichnen
+        </button>
+        <button class="mt">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Löschen
+        </button>
+      </div>
+
+      <!-- Zoom -->
+      <div class="zoom">
+        <button class="zb">+</button>
+        <div class="zsep"></div>
+        <button class="zb">−</button>
+      </div>
+
+      <!-- Hover Tooltip — Score-Zahl in Heatmap-Farbe + Legende-Balken -->
+      <div style="position:absolute;left:19%;top:9%;z-index:3;">
+        <div style="background:#fff;border:1px solid #c9dfe8;border-radius:12px;overflow:hidden;width:218px;box-shadow:0 6px 24px rgba(0,0,0,.13);font-family:'Inter',sans-serif;">
+          <!-- Weißer Header: Score-Zahl in Heatmap-Farbe -->
+          <div style="padding:14px 16px 12px;background:#fff;">
+            <div style="font-size:9px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:#7c97cd;margin-bottom:4px;">Schwamm-Score</div>
+            <div style="display:flex;align-items:baseline;gap:3px;">
+              <span style="font-size:52px;font-weight:700;letter-spacing:-3px;line-height:1;color:#2d7a3a;">68,7</span>
+              <span style="font-size:22px;font-weight:600;color:#2d7a3a;">%</span>
+            </div>
+          </div>
+          <!-- Trennlinie -->
+          <div style="height:1px;background:#E6F4F1;"></div>
+          <!-- Body: Wassertropfen -->
+          <div style="padding:12px 14px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="font-size:11px;color:#1A2B2F;line-height:1.55;flex:1;">
+                Bei einem Regenfall von <strong style="color:#66C6DF;">50 mm</strong> in 24h hält diese Fläche:
+              </div>
+              <!-- Wassertropfen SVG mit Zahl drin -->
+              <div style="flex-shrink:0;position:relative;width:54px;height:66px;">
+                <svg viewBox="0 0 54 66" width="54" height="66" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M27 4 C27 4 6 28 6 42 a21 21 0 0 0 42 0 C48 28 27 4 27 4 Z"
+                    fill="#D1EAF1" stroke="#66C6DF" stroke-width="2"/>
+                  <clipPath id="fill-clip2">
+                    <rect x="0" y="28" width="54" height="40"/>
+                  </clipPath>
+                  <path d="M27 4 C27 4 6 28 6 42 a21 21 0 0 0 42 0 C48 28 27 4 27 4 Z"
+                    fill="#66C6DF" opacity=".4" clip-path="url(#fill-clip2)"/>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:10px;">
+                  <span style="font-size:16px;font-weight:700;color:#2E296B;line-height:1;">34</span>
+                  <span style="font-size:9px;font-weight:600;color:#2E296B;letter-spacing:.3px;">Liter</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Tooltip-Pfeil nach unten -->
+        <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid #fff;margin-left:24px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.08));"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO BAR — echte Zahlen aus /stats (4,59M Zellen, 3,66M mit Score, ∅ 56.8% @ 50mm) -->
+  <div class="info-bar">
+    <div style="width:7px;height:7px;border-radius:50%;background:#66C6DF;flex-shrink:0;"></div>
+    <span style="color:#1A2B2F;">3.661.338 Zellen mit Score</span>
+    <div class="ib-sep"></div>
+    <span>∅ Score: <strong style="color:#2E296B;">56.8 %</strong> bei 50 mm</span>
+    <div class="ib-sep"></div>
+    <span>Score-Range: <strong style="color:#1A2B2F;">11.4 – 96.6 %</strong></span>
+    <div class="ib-sep"></div>
+    <span>903.128 Zellen ohne Score (Widerspruch)</span>
+    <div style="margin-left:auto;font-size:10px;color:#c9dfe8;">Zoom 17 · Pforzheim</div>
+  </div>
+
+</div>
+
+<!-- FILTER EINGEKLAPPT -->
+<div class="lbl">Filter eingeklappt</div>
+<div class="app">
+
+  <!-- NAV — Filter-Button nicht aktiv -->
+  <div class="nav">
+    <div class="logo">Sponge</div>
+    <div class="search-bar">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c97cd" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input placeholder="Adresse oder Ort suchen...">
+    </div>
+    <div class="nav-right">
+      <button class="btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter
+      </button>
+      <button class="btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Heatmap
+      </button>
+      <button class="btn export">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
+      </button>
+    </div>
+  </div>
+
+  <!-- BODY: Karte volle Breite, Legende als Overlay unten links -->
+  <div style="position:relative;min-height:520px;background:#eef1ea;overflow:hidden;">
+
+    <!-- OSM bg -->
+    <div style="position:absolute;inset:0;">
+      <div style="position:absolute;left:0;top:35%;right:0;height:7px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:0;top:61%;right:0;height:4px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:26%;top:0;bottom:0;width:6px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:59%;top:0;bottom:0;width:4px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:0;top:49%;right:0;height:10px;background:#c5dff5;opacity:.7;"></div>
+      <div style="position:absolute;left:5%;top:10%;width:17%;height:19%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:29%;top:8%;width:11%;height:14%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:63%;top:11%;width:21%;height:17%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:5%;top:68%;width:19%;height:21%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:43%;top:70%;width:15%;height:17%;background:#dce4d6;border-radius:2px;"></div>
+    </div>
+
+    <!-- Heatmap cells -->
+    <div style="position:absolute;inset:0;opacity:.55;pointer-events:none;">
+      <div style="position:absolute;left:6%;top:12%;width:11%;height:16%;background:#1a9850;border-radius:2px;"></div>
+      <div style="position:absolute;left:19%;top:9%;width:8%;height:12%;background:#66bd63;border-radius:2px;"></div>
+      <div style="position:absolute;left:43%;top:20%;width:14%;height:20%;background:#a6d96a;border-radius:2px;"></div>
+      <div style="position:absolute;left:60%;top:14%;width:10%;height:14%;background:#a6d96a;border-radius:2px;"></div>
+      <div style="position:absolute;left:29%;top:39%;width:11%;height:13%;background:#fdae61;border-radius:2px;"></div>
+      <div style="position:absolute;left:53%;top:56%;width:9%;height:11%;background:#fee08b;border-radius:2px;"></div>
+      <div style="position:absolute;left:6%;top:60%;width:16%;height:20%;background:#d73027;border-radius:2px;"></div>
+      <div style="position:absolute;left:68%;top:44%;width:10%;height:13%;background:#f46d43;border-radius:2px;"></div>
+      <div style="position:absolute;left:36%;top:65%;width:13%;height:13%;background:#f46d43;border-radius:2px;"></div>
+    </div>
+
+    <!-- Map tools -->
+    <div class="map-tools">
+      <button class="mt active">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Auswahl
+      </button>
+      <button class="mt">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Fläche zeichnen
+      </button>
+      <button class="mt">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Löschen
+      </button>
+    </div>
+
+    <!-- Zoom -->
+    <div class="zoom">
+      <button class="zb">+</button>
+      <div class="zsep"></div>
+      <button class="zb">−</button>
+    </div>
+
+    <!-- LEGENDE — fix unten links als Overlay-Karte -->
+    <div style="position:absolute;bottom:16px;left:16px;z-index:2;background:#fff;border:1px solid #c9dfe8;border-radius:8px;padding:12px 14px;width:220px;box-shadow:0 2px 12px rgba(0,0,0,.1);">
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#7c97cd;margin-bottom:8px;">Heatmap-Legende</div>
+      <div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#d73027 0%,#f46d43 17%,#fdae61 33%,#fee08b 50%,#a6d96a 67%,#66bd63 83%,#1a9850 100%);margin-bottom:5px;"></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#7c97cd;">
+        <span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;margin-top:4px;">
+        <span style="color:#d73027;font-weight:600;">Schlecht</span>
+        <span style="color:#1a9850;font-weight:600;">Sehr gut</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- INFO BAR -->
+  <div class="info-bar">
+    <div style="width:7px;height:7px;border-radius:50%;background:#66C6DF;flex-shrink:0;"></div>
+    <span style="color:#1A2B2F;">3.661.338 Zellen mit Score</span>
+    <div class="ib-sep"></div>
+    <span>∅ Score: <strong style="color:#2E296B;">56.8 %</strong> bei 50 mm</span>
+    <div class="ib-sep"></div>
+    <span>Score-Range: <strong style="color:#1A2B2F;">11.4 – 96.6 %</strong></span>
+    <div class="ib-sep"></div>
+    <span>903.128 Zellen ohne Score (Widerspruch)</span>
+    <div style="margin-left:auto;font-size:10px;color:#c9dfe8;">Zoom 17 · Pforzheim</div>
+  </div>
+
+</div>
+
+<!-- SCORE COLORS — Zahl in Heatmap-Farbe, keine Legende in Karte -->
+<div class="lbl">Schwammstadt-Score — Farbe nach Wert</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;max-width:920px;">
+
+  <!-- 15% → rot -->
+  <div style="border:1px solid #c9dfe8;border-radius:8px;overflow:hidden;min-width:120px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+    <div style="padding:14px 14px 10px;">
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#7c97cd;margin-bottom:3px;">Schwamm-Score</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
+        <span style="font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1;color:#d73027;">15</span>
+        <span style="font-size:16px;font-weight:600;color:#d73027;">%</span>
+      </div>
+    </div>
+    <div style="padding:6px 14px 8px;border-top:1px solid #E6F4F1;font-size:10px;font-weight:600;color:#d73027;">Sehr schlecht</div>
+  </div>
+
+  <!-- 32% → orange -->
+  <div style="border:1px solid #c9dfe8;border-radius:8px;overflow:hidden;min-width:120px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+    <div style="padding:14px 14px 10px;">
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#7c97cd;margin-bottom:3px;">Schwamm-Score</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
+        <span style="font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1;color:#f46d43;">32</span>
+        <span style="font-size:16px;font-weight:600;color:#f46d43;">%</span>
+      </div>
+    </div>
+    <div style="padding:6px 14px 8px;border-top:1px solid #E6F4F1;font-size:10px;font-weight:600;color:#f46d43;">Schlecht</div>
+  </div>
+
+  <!-- 50% → gelb-amber -->
+  <div style="border:1px solid #c9dfe8;border-radius:8px;overflow:hidden;min-width:120px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+    <div style="padding:14px 14px 10px;">
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#7c97cd;margin-bottom:3px;">Schwamm-Score</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
+        <span style="font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1;color:#e07b00;">50</span>
+        <span style="font-size:16px;font-weight:600;color:#e07b00;">%</span>
+      </div>
+    </div>
+    <div style="padding:6px 14px 8px;border-top:1px solid #E6F4F1;font-size:10px;font-weight:600;color:#e07b00;">Mittel</div>
+  </div>
+
+  <!-- 68,7% → grün -->
+  <div style="border:1px solid #c9dfe8;border-radius:8px;overflow:hidden;min-width:120px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+    <div style="padding:14px 14px 10px;">
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#7c97cd;margin-bottom:3px;">Schwamm-Score</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
+        <span style="font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1;color:#2d7a3a;">68,7</span>
+        <span style="font-size:16px;font-weight:600;color:#2d7a3a;">%</span>
+      </div>
+    </div>
+    <div style="padding:6px 14px 8px;border-top:1px solid #E6F4F1;font-size:10px;font-weight:600;color:#2d7a3a;">Gut</div>
+  </div>
+
+  <!-- 88% → dunkelgrün -->
+  <div style="border:1px solid #c9dfe8;border-radius:8px;overflow:hidden;min-width:120px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+    <div style="padding:14px 14px 10px;">
+      <div style="font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#7c97cd;margin-bottom:3px;">Schwamm-Score</div>
+      <div style="display:flex;align-items:baseline;gap:2px;">
+        <span style="font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1;color:#1a9850;">88</span>
+        <span style="font-size:16px;font-weight:600;color:#1a9850;">%</span>
+      </div>
+    </div>
+    <div style="padding:6px 14px 8px;border-top:1px solid #E6F4F1;font-size:10px;font-weight:600;color:#1a9850;">Sehr gut</div>
+  </div>
+
+</div>
+
+<!-- AREA MASKING UI -->
+<style>
+  @keyframes dash-anim { to { stroke-dashoffset: -20; } }
+  @keyframes pulse-dot { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.4); opacity:.7; } }
+  @keyframes fade-trail { 0% { opacity:.5; } 100% { opacity:0; } }
+  .draw-cursor { animation: pulse-dot 1.2s ease-in-out infinite; }
+  .poly-edge-anim { animation: dash-anim .5s linear infinite; }
+</style>
+
+<!-- STATE 1: Während dem Zeichnen -->
+<div class="lbl">Flächen-Masking — Zustand 1: Zeichnen</div>
+<div style="max-width:920px;background:#fff;border:1px solid #e1e6ec;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07);">
+
+  <!-- Toolbar: draw mode active -->
+  <div style="padding:8px 12px;border-bottom:1px solid #e9edf1;display:flex;align-items:center;gap:8px;background:#fafbfc;">
+    <div style="display:flex;gap:3px;">
+      <div style="display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #e1e6ec;border-radius:5px;padding:5px 10px;font-size:11px;color:#94a3b8;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Auswahl
+      </div>
+      <!-- ACTIVE draw button — glowing ring -->
+      <div style="display:flex;align-items:center;gap:5px;background:#1e293b;border:1px solid #1e293b;border-radius:5px;padding:5px 10px;font-size:11px;color:#fff;font-weight:600;box-shadow:0 0 0 2px rgba(30,41,59,.15);">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Polygon zeichnen
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #e1e6ec;border-radius:5px;padding:5px 10px;font-size:11px;color:#94a3b8;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><circle cx="11" cy="11" r="3"/></svg>Kreis
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #e1e6ec;border-radius:5px;padding:5px 10px;font-size:11px;color:#94a3b8;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>Rechteck
+      </div>
+    </div>
+    <div style="width:1px;height:22px;background:#e9edf1;margin:0 2px;"></div>
+    <!-- hint pill -->
+    <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;padding:4px 10px;">
+      <span style="display:inline-block;width:6px;height:6px;background:#f59e0b;border-radius:50%;flex-shrink:0;"></span>
+      3 Punkte gesetzt · Klicken zum Fortfahren · <strong>Doppelklick</strong> zum Abschließen · <kbd style="background:#e2e8f0;border-radius:3px;padding:0 4px;font-size:9px;font-family:monospace;">ESC</kbd> Abbrechen
+    </div>
+  </div>
+
+  <!-- Map canvas with SVG polygon being drawn -->
+  <div style="position:relative;height:320px;background:#eef1ea;overflow:hidden;cursor:crosshair;">
+
+    <!-- OSM-light bg -->
+    <div style="position:absolute;inset:0;">
+      <div style="position:absolute;left:0;top:40%;right:0;height:7px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:0;top:64%;right:0;height:4px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:30%;top:0;bottom:0;width:5px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:0;top:51%;right:0;height:9px;background:#c5dff5;opacity:.6;"></div>
+      <div style="position:absolute;left:4%;top:7%;width:19%;height:22%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:62%;top:9%;width:22%;height:19%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:4%;top:68%;width:22%;height:22%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:50%;top:68%;width:14%;height:18%;background:#dce4d6;border-radius:2px;"></div>
+    </div>
+
+    <!-- Heatmap cells, slightly dimmed during draw -->
+    <div style="position:absolute;inset:0;opacity:.35;pointer-events:none;">
+      <div style="position:absolute;left:5%;top:9%;width:13%;height:18%;background:#1b4332;border-radius:2px;"></div>
+      <div style="position:absolute;left:44%;top:18%;width:14%;height:19%;background:#52b788;border-radius:2px;"></div>
+      <div style="position:absolute;left:62%;top:12%;width:12%;height:16%;background:#74c69d;border-radius:2px;"></div>
+      <div style="position:absolute;left:30%;top:44%;width:12%;height:13%;background:#ca8a04;border-radius:2px;"></div>
+      <div style="position:absolute;left:5%;top:63%;width:18%;height:20%;background:#9b1c1c;border-radius:2px;"></div>
+      <div style="position:absolute;left:52%;top:70%;width:11%;height:14%;background:#ea580c;border-radius:2px;"></div>
+    </div>
+
+    <!-- SVG polygon being drawn — irregular L-shape -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- fill under drawn polygon (partial) -->
+      <polygon points="320,55 490,38 540,130 460,170 350,185 280,120"
+        fill="rgba(37,99,235,0.09)" stroke="none"/>
+
+      <!-- completed edges — solid animated dash -->
+      <polyline points="320,55 490,38 540,130 460,170 350,185 280,120"
+        fill="none" stroke="#2563eb" stroke-width="2"
+        stroke-dasharray="6 4" class="poly-edge-anim"/>
+
+      <!-- ghost edge to cursor (last point → cursor) -->
+      <line x1="320" y1="55" x2="295" y2="80"
+        stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 4" opacity=".5"/>
+
+      <!-- snap-to-close ring around first vertex -->
+      <circle cx="320" cy="55" r="12" fill="rgba(37,99,235,.12)" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+      <!-- placed vertices — white with blue ring -->
+      <circle cx="320" cy="55" r="6" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="490" cy="38" r="6" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="540" cy="130" r="6" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="460" cy="170" r="6" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="350" cy="185" r="6" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="280" cy="120" r="6" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+
+      <!-- current cursor position — pulsing dot -->
+      <circle cx="295" cy="80" r="5" fill="#2563eb" filter="url(#glow)" class="draw-cursor"/>
+      <circle cx="295" cy="80" r="9" fill="none" stroke="#2563eb" stroke-width="1" opacity=".4" class="draw-cursor"/>
+    </svg>
+
+    <!-- area label floating near polygon center -->
+    <div style="position:absolute;left:44%;top:42%;transform:translate(-50%,-50%);pointer-events:none;">
+      <div style="background:rgba(255,255,255,.97);border:1px solid #cbd5e1;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:600;color:#1e293b;box-shadow:0 3px 12px rgba(0,0,0,.12);white-space:nowrap;display:flex;align-items:center;gap:5px;">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+        <span style="color:#64748b;font-weight:400;">≈</span> <span style="color:#2563eb;">3.840 m²</span>
+      </div>
+    </div>
+
+    <!-- vertex count badge -->
+    <div style="position:absolute;top:12px;right:12px;background:#1e293b;border-radius:6px;padding:5px 10px;font-size:10px;color:#fff;font-weight:600;display:flex;align-items:center;gap:5px;">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      6 Punkte
+    </div>
+  </div>
+
+  <!-- bottom bar: drawing in progress -->
+  <div style="border-top:1px solid #e9edf1;background:#fafbfc;padding:9px 14px;display:flex;align-items:center;gap:12px;font-size:11px;color:#94a3b8;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:8px;height:8px;background:#2563eb;border-radius:50%;animation:pulse-dot 1.2s ease-in-out infinite;"></span>
+      <span style="color:#475569;font-weight:500;">Zeichne Polygon...</span>
+    </div>
+    <div style="width:1px;height:14px;background:#e2e8f0;"></div>
+    <span>Bisherige Fläche: <strong style="color:#1e293b;">≈ 3.840 m²</strong></span>
+    <div style="width:1px;height:14px;background:#e2e8f0;"></div>
+    <span>Zellen: ~<strong style="color:#1e293b;">3.840</strong></span>
+    <div style="margin-left:auto;">
+      <button style="padding:4px 10px;background:#fff;border:1px solid #e1e6ec;border-radius:5px;font-size:11px;color:#64748b;cursor:pointer;font-family:'Inter',sans-serif;">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATE 2: Polygon abgeschlossen — Bearbeiten -->
+<div class="lbl" style="margin-top:28px;">Flächen-Masking — Zustand 2: Abgeschlossen (Sidebar zeigt Ergebnis)</div>
+<div style="max-width:920px;background:#fff;border:1px solid #e1e6ec;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07);">
+
+  <!-- Toolbar: selection mode, polygon done -->
+  <div style="padding:8px 12px;border-bottom:1px solid #e9edf1;display:flex;align-items:center;gap:8px;background:#fafbfc;">
+    <div style="display:flex;gap:3px;">
+      <div style="display:flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:5px;padding:5px 10px;font-size:11px;color:#334155;font-weight:600;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Auswahl
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #e1e6ec;border-radius:5px;padding:5px 10px;font-size:11px;color:#94a3b8;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Polygon zeichnen
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #e1e6ec;border-radius:5px;padding:5px 10px;font-size:11px;color:#94a3b8;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><circle cx="11" cy="11" r="3"/></svg>Kreis
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #e1e6ec;border-radius:5px;padding:5px 10px;font-size:11px;color:#94a3b8;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>Rechteck
+      </div>
+      <div style="width:1px;height:22px;background:#e9edf1;margin:0 2px;"></div>
+      <div style="display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #fca5a5;border-radius:5px;padding:5px 10px;font-size:11px;color:#dc2626;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Löschen
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:10.5px;color:#64748b;">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Punkte verschieben zum Anpassen
+    </div>
+  </div>
+
+  <!-- Body: Sidebar + Map -->
+  <div style="display:grid;grid-template-columns:262px 1fr;">
+
+    <!-- Sidebar — Markierte Fläche erscheint nur wenn Polygon aktiv -->
+    <div style="border-right:1px solid #e9edf1;padding:16px;background:#fafbfc;display:flex;flex-direction:column;gap:14px;">
+      <!-- Score Filter (unverändert) -->
+      <div>
+        <div class="s-title">Score Filter</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;color:#64748b;">Sponge Score</span>
+          <span style="font-size:11px;font-weight:600;color:#475569;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:2px 8px;">0 – 100 %</span>
+        </div>
+        <div style="position:relative;height:4px;background:#e1e6ec;border-radius:99px;margin-bottom:7px;">
+          <div style="position:absolute;height:100%;background:#475569;left:0;width:100%;border-radius:99px;"></div>
+          <div style="position:absolute;width:14px;height:14px;background:#fff;border:2px solid #475569;border-radius:50%;top:50%;left:0%;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.12);"></div>
+          <div style="position:absolute;width:14px;height:14px;background:#fff;border:2px solid #475569;border-radius:50%;top:50%;left:100%;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.12);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:#c2cad4;"><span>0 %</span><span>50 %</span><span>100 %</span></div>
+      </div>
+      <div style="height:1px;background:#e9edf1;"></div>
+      <!-- Regenfall -->
+      <div>
+        <div class="s-title">Regenfall simulieren</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;color:#64748b;">Niederschlag</span>
+          <span style="font-size:11px;font-weight:600;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:2px 8px;">50 mm</span>
+        </div>
+        <div style="position:relative;height:4px;background:#e1e6ec;border-radius:99px;margin-bottom:7px;">
+          <div style="position:absolute;height:100%;background:#0369a1;left:0;width:57%;border-radius:99px;"></div>
+          <div style="position:absolute;width:14px;height:14px;background:#fff;border:2px solid #0369a1;border-radius:50%;top:50%;left:57%;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.12);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:#c2cad4;"><span>30 mm</span><span>55 mm</span><span>80 mm</span></div>
+        <div style="font-size:10px;color:#a8b4c0;margin-top:3px;">Niederschlag innerhalb 24 h</div>
+      </div>
+      <div style="height:1px;background:#e9edf1;"></div>
+
+      <!-- MARKIERTE FLÄCHE — erscheint nur wenn Polygon aktiv -->
+      <div>
+        <div class="s-title" style="display:flex;align-items:center;gap:5px;">
+          <span style="width:6px;height:6px;background:#2563eb;border-radius:50%;display:inline-block;"></span>
+          Markierte Fläche
+        </div>
+        <!-- Score-Karte mit Farbverlauf -->
+        <div style="border-radius:8px;overflow:hidden;border:1px solid #e1e6ec;margin-bottom:10px;">
+          <div style="background:linear-gradient(90deg,#991b1b 0%,#c2410c 20%,#ca8a04 40%,#84cc16 60%,#2d6a4f 80%,#1b4332 100%);padding:10px 12px;position:relative;">
+            <div style="position:absolute;bottom:-1px;left:calc(71.2% - 5px);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid rgba(255,255,255,.9);"></div>
+            <div style="display:flex;align-items:baseline;gap:2px;">
+              <span style="font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.2);">71,2</span>
+              <span style="font-size:14px;font-weight:600;color:rgba(255,255,255,.85);">%</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:1px;">⌀ Schwamm-Score</div>
+            <div style="margin-top:6px;height:3px;background:rgba(255,255,255,.2);border-radius:99px;position:relative;">
+              <div style="position:absolute;left:calc(71.2% - 4px);top:-2.5px;width:8px;height:8px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+            </div>
+          </div>
+          <div style="padding:9px 12px;background:#fff;display:flex;flex-direction:column;gap:4px;font-size:11px;">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#94a3b8;">Fläche</span>
+              <span style="color:#1e293b;font-weight:500;">3.840 m²</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#94a3b8;">Zellen</span>
+              <span style="color:#1e293b;font-weight:500;">3.840</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#94a3b8;">Rückhalt</span>
+              <span style="color:#0369a1;font-weight:600;">~131.000 L</span>
+            </div>
+          </div>
+        </div>
+        <button style="width:100%;padding:7px;background:#2d6a4f;border:1px solid #2d6a4f;border-radius:6px;font-size:11px;color:#fff;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Analyse starten
+        </button>
+        <button style="width:100%;padding:6px;background:#fff;border:1px solid #e1e6ec;border-radius:6px;font-size:11px;color:#64748b;cursor:pointer;font-family:'Inter',sans-serif;margin-top:4px;">Fläche löschen</button>
+      </div>
+    </div>
+
+    <!-- Map with finished polygon -->
+    <div style="position:relative;height:380px;background:#eef1ea;overflow:hidden;">
+
+    <!-- OSM bg -->
+    <div style="position:absolute;inset:0;">
+      <div style="position:absolute;left:0;top:40%;right:0;height:7px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:0;top:64%;right:0;height:4px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:30%;top:0;bottom:0;width:5px;background:#d8dfd1;"></div>
+      <div style="position:absolute;left:0;top:51%;right:0;height:9px;background:#c5dff5;opacity:.6;"></div>
+      <div style="position:absolute;left:4%;top:7%;width:19%;height:22%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:62%;top:9%;width:22%;height:19%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:4%;top:68%;width:22%;height:22%;background:#dce4d6;border-radius:2px;"></div>
+      <div style="position:absolute;left:50%;top:68%;width:14%;height:18%;background:#dce4d6;border-radius:2px;"></div>
+    </div>
+
+    <!-- Heatmap cells — dimmed outside polygon conceptually -->
+    <div style="position:absolute;inset:0;opacity:.4;pointer-events:none;">
+      <div style="position:absolute;left:5%;top:9%;width:13%;height:18%;background:#1b4332;border-radius:2px;opacity:.25;"></div>
+      <div style="position:absolute;left:44%;top:18%;width:14%;height:19%;background:#52b788;border-radius:2px;"></div>
+      <div style="position:absolute;left:62%;top:12%;width:12%;height:16%;background:#74c69d;border-radius:2px;"></div>
+      <div style="position:absolute;left:30%;top:44%;width:12%;height:13%;background:#ca8a04;border-radius:2px;"></div>
+      <div style="position:absolute;left:5%;top:63%;width:18%;height:20%;background:#9b1c1c;border-radius:2px;opacity:.25;"></div>
+      <div style="position:absolute;left:52%;top:70%;width:11%;height:14%;background:#ea580c;border-radius:2px;"></div>
+    </div>
+
+    <!-- SVG polygon — finished, editable -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+      <!-- outer glow / shadow -->
+      <polygon points="320,55 490,38 540,130 460,170 350,185 280,120"
+        fill="rgba(37,99,235,0.06)" stroke="rgba(37,99,235,.15)" stroke-width="8"/>
+
+      <!-- main polygon fill -->
+      <polygon points="320,55 490,38 540,130 460,170 350,185 280,120"
+        fill="rgba(37,99,235,0.11)" stroke="#2563eb" stroke-width="2"/>
+
+      <!-- mid-edge ghost handles -->
+      <circle cx="405" cy="46" r="4" fill="rgba(255,255,255,.9)" stroke="#93c5fd" stroke-width="1.5"/>
+      <circle cx="515" cy="84" r="4" fill="rgba(255,255,255,.9)" stroke="#93c5fd" stroke-width="1.5"/>
+      <circle cx="500" cy="150" r="4" fill="rgba(255,255,255,.9)" stroke="#93c5fd" stroke-width="1.5"/>
+      <circle cx="405" cy="178" r="4" fill="rgba(255,255,255,.9)" stroke="#93c5fd" stroke-width="1.5"/>
+      <circle cx="315" cy="153" r="4" fill="rgba(255,255,255,.9)" stroke="#93c5fd" stroke-width="1.5"/>
+      <circle cx="300" cy="88" r="4" fill="rgba(255,255,255,.9)" stroke="#93c5fd" stroke-width="1.5"/>
+
+      <!-- vertex handles — solid, draggable -->
+      <circle cx="320" cy="55" r="7" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="490" cy="38" r="7" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="540" cy="130" r="7" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="460" cy="170" r="7" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <circle cx="350" cy="185" r="7" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>
+      <!-- active/hovered vertex -->
+      <circle cx="280" cy="120" r="7" fill="#2563eb" stroke="#1d4ed8" stroke-width="2"/>
+      <circle cx="280" cy="120" r="12" fill="none" stroke="#2563eb" stroke-width="1" opacity=".3"/>
+    </svg>
+
+    <!-- area + score badge in polygon center -->
+    <div style="position:absolute;left:44%;top:44%;transform:translate(-50%,-50%);pointer-events:none;text-align:center;">
+      <div style="background:rgba(255,255,255,.97);border:1px solid #cbd5e1;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;color:#1e293b;box-shadow:0 4px 16px rgba(0,0,0,.14);white-space:nowrap;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:500;margin-bottom:3px;">Markierte Fläche</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:#2563eb;font-size:13px;">3.840 m²</span>
+          <span style="color:#cbd5e1;">|</span>
+          <span style="color:#2d6a4f;">⌀ 71.2 %</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- drag tooltip at active vertex -->
+    <div style="position:absolute;left:260px;top:90px;background:#1e293b;border-radius:5px;padding:4px 8px;font-size:10px;color:#fff;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.2);">
+      Ziehen zum Anpassen
+      <div style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #1e293b;"></div>
+    </div>
+  </div><!-- end map -->
+  </div><!-- end grid body -->
+
+  <!-- Bottom bar -->
+  <div style="border-top:1px solid #e9edf1;background:#fafbfc;padding:9px 14px;display:flex;align-items:center;gap:12px;font-size:11px;color:#94a3b8;">
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div style="width:8px;height:8px;background:#2563eb;border-radius:50%;flex-shrink:0;"></div>
+      <span style="color:#475569;font-weight:500;">Polygon aktiv</span>
+    </div>
+    <div style="width:1px;height:14px;background:#e2e8f0;"></div>
+    <span>Fläche: <strong style="color:#1e293b;">3.840 m²</strong></span>
+    <div style="width:1px;height:14px;background:#e2e8f0;"></div>
+    <span>Zellen: <strong style="color:#1e293b;">3.840</strong></span>
+    <div style="width:1px;height:14px;background:#e2e8f0;"></div>
+    <span>⌀ Score: <strong style="color:#2d6a4f;">71.2 %</strong></span>
+    <div style="width:1px;height:14px;background:#e2e8f0;"></div>
+    <span>Rückhalt: <strong style="color:#0369a1;">~131.000 L</strong></span>
+  </div>
+</div>
+
+</body>
+</html>

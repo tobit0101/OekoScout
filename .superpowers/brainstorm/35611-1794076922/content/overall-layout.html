@@ -1,0 +1,137 @@
+<h2>Gesamtlayout der Sponge Web App</h2>
+<p class="subtitle">Wie soll die Karte im Verhältnis zu den UI-Elementen (Filter, Score-Panel, Suche) angeordnet sein?</p>
+
+<div class="cards">
+
+  <!-- Option A: Fullscreen Map + Floating Panels -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1a2e;padding:12px;border-radius:6px;font-family:monospace;font-size:11px;color:#ccc;">
+      <div style="display:grid;grid-template-rows:36px 1fr;height:160px;gap:4px;">
+        <div style="background:#16213e;border-radius:4px;display:flex;align-items:center;padding:0 12px;gap:8px;">
+          <div style="background:#0f3460;border-radius:3px;padding:2px 10px;color:#4fc3f7;font-size:10px;">🔍 Adresse suchen...</div>
+          <div style="margin-left:auto;display:flex;gap:4px;">
+            <div style="background:#0f3460;border-radius:3px;padding:2px 8px;font-size:9px;color:#81c784;">Filter</div>
+            <div style="background:#0f3460;border-radius:3px;padding:2px 8px;font-size:9px;color:#81c784;">Layer</div>
+          </div>
+        </div>
+        <div style="position:relative;background:linear-gradient(135deg,#1b5e20 0%,#33691e 40%,#558b2f 70%,#f9a825 100%);border-radius:4px;overflow:hidden;">
+          <!-- Map tiles mockup -->
+          <div style="position:absolute;inset:0;opacity:0.2;background-image:repeating-linear-gradient(0deg,transparent,transparent 19px,#fff 19px,#fff 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,#fff 19px,#fff 20px);"></div>
+          <!-- Floating score card bottom left -->
+          <div style="position:absolute;bottom:8px;left:8px;background:rgba(15,20,40,0.92);border-radius:6px;padding:8px 10px;backdrop-filter:blur(4px);border:1px solid rgba(79,195,247,0.3);">
+            <div style="color:#4fc3f7;font-size:9px;font-weight:700;letter-spacing:1px;">SPONGE SCORE</div>
+            <div style="color:#81c784;font-size:18px;font-weight:800;line-height:1.1;">67.7%</div>
+            <div style="color:#aaa;font-size:8px;">34 L bei 50mm Regen</div>
+          </div>
+          <!-- Floating filter bottom right -->
+          <div style="position:absolute;bottom:8px;right:8px;background:rgba(15,20,40,0.92);border-radius:6px;padding:6px 8px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.1);">
+            <div style="color:#aaa;font-size:8px;margin-bottom:4px;">SCORE FILTER</div>
+            <div style="background:#0f3460;border-radius:3px;height:4px;width:80px;position:relative;">
+              <div style="background:#4fc3f7;border-radius:3px;height:100%;width:60%;"></div>
+              <div style="position:absolute;top:-3px;left:60%;width:10px;height:10px;background:#fff;border-radius:50%;border:2px solid #4fc3f7;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:#aaa;font-size:7px;margin-top:2px;width:80px;">
+              <span>0%</span><span>100%</span>
+            </div>
+          </div>
+          <!-- Floating area tool top right -->
+          <div style="position:absolute;top:8px;right:8px;background:rgba(15,20,40,0.92);border-radius:6px;padding:4px 6px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.1);display:flex;gap:4px;">
+            <div style="background:#0f3460;border-radius:3px;padding:2px 5px;font-size:8px;color:#4fc3f7;">✏️</div>
+            <div style="background:#0f3460;border-radius:3px;padding:2px 5px;font-size:8px;color:#aaa;">🔍+</div>
+            <div style="background:#0f3460;border-radius:3px;padding:2px 5px;font-size:8px;color:#aaa;">🔍-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Fullscreen Map + Floating Panels</h3>
+      <p>Karte nimmt den gesamten Bildschirm ein. Alle Controls schweben als kompakte Overlays darüber. Maximale Kartenfläche, modernes "GIS-App"-Feeling wie Google Maps oder Mapbox Studio.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Left Sidebar + Map -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1a2e;padding:12px;border-radius:6px;font-family:monospace;font-size:11px;color:#ccc;">
+      <div style="display:grid;grid-template-columns:120px 1fr;height:160px;gap:4px;">
+        <!-- Sidebar -->
+        <div style="background:#16213e;border-radius:4px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+          <div style="color:#4fc3f7;font-size:9px;font-weight:700;letter-spacing:1px;">SPONGE</div>
+          <div style="background:#0f3460;border-radius:3px;height:18px;display:flex;align-items:center;padding:0 6px;">
+            <span style="color:#aaa;font-size:7px;">🔍 Suche...</span>
+          </div>
+          <div style="border-top:1px solid #0f3460;padding-top:4px;">
+            <div style="color:#aaa;font-size:7px;margin-bottom:3px;">KLASSE</div>
+            <div style="display:flex;flex-wrap:wrap;gap:2px;">
+              <div style="background:#1b5e20;border-radius:2px;padding:1px 4px;font-size:7px;color:#81c784;">Dach</div>
+              <div style="background:#0d47a1;border-radius:2px;padding:1px 4px;font-size:7px;color:#90caf9;">Versiegelt</div>
+              <div style="background:#2e7d32;border-radius:2px;padding:1px 4px;font-size:7px;color:#81c784;">Wiese</div>
+            </div>
+          </div>
+          <div>
+            <div style="color:#aaa;font-size:7px;margin-bottom:2px;">SCORE %</div>
+            <div style="background:#0f3460;border-radius:2px;height:3px;width:100%;position:relative;">
+              <div style="background:#4fc3f7;border-radius:2px;height:100%;width:65%;"></div>
+            </div>
+          </div>
+          <div style="margin-top:auto;background:rgba(79,195,247,0.1);border-radius:4px;padding:6px;border:1px solid rgba(79,195,247,0.2);">
+            <div style="color:#4fc3f7;font-size:8px;font-weight:700;">67.7%</div>
+            <div style="color:#81c784;font-size:7px;">Score</div>
+            <div style="color:#aaa;font-size:7px;">34L / 50mm</div>
+          </div>
+        </div>
+        <!-- Map -->
+        <div style="position:relative;background:linear-gradient(135deg,#1b5e20 0%,#33691e 40%,#558b2f 70%,#f9a825 100%);border-radius:4px;overflow:hidden;">
+          <div style="position:absolute;inset:0;opacity:0.2;background-image:repeating-linear-gradient(0deg,transparent,transparent 19px,#fff 19px,#fff 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,#fff 19px,#fff 20px);"></div>
+          <div style="position:absolute;top:6px;right:6px;display:flex;flex-direction:column;gap:2px;">
+            <div style="background:rgba(15,20,40,0.92);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:#4fc3f7;font-size:10px;cursor:pointer;">+</div>
+            <div style="background:rgba(15,20,40,0.92);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:10px;cursor:pointer;">−</div>
+            <div style="background:rgba(15,20,40,0.92);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:9px;cursor:pointer;">✏</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Left Sidebar + Map</h3>
+      <p>Feste linke Seitenleiste mit Suche, Filtern und Score-Panel. Karte rechts daneben. Ähnlich wie QGIS oder mapbox.com/studio. Gut für Power-User, die viel filtern.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Top Bar + Bottom Drawer -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1a2e;padding:12px;border-radius:6px;font-family:monospace;font-size:11px;color:#ccc;">
+      <div style="display:grid;grid-template-rows:32px 1fr 40px;height:160px;gap:3px;">
+        <!-- Top bar -->
+        <div style="background:#16213e;border-radius:4px;display:flex;align-items:center;padding:0 10px;gap:8px;">
+          <div style="color:#4fc3f7;font-size:10px;font-weight:700;">SPONGE</div>
+          <div style="flex:1;background:#0f3460;border-radius:3px;height:18px;display:flex;align-items:center;padding:0 8px;">
+            <span style="color:#aaa;font-size:8px;">🔍 Adresse oder Ort suchen...</span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <div style="background:#0f3460;border-radius:3px;padding:2px 6px;font-size:8px;color:#81c784;">Filter</div>
+            <div style="background:#0f3460;border-radius:3px;padding:2px 6px;font-size:8px;color:#aaa;">Layer</div>
+          </div>
+        </div>
+        <!-- Map -->
+        <div style="position:relative;background:linear-gradient(135deg,#1b5e20 0%,#33691e 40%,#558b2f 70%,#f9a825 100%);border-radius:4px;overflow:hidden;">
+          <div style="position:absolute;inset:0;opacity:0.2;background-image:repeating-linear-gradient(0deg,transparent,transparent 14px,#fff 14px,#fff 15px),repeating-linear-gradient(90deg,transparent,transparent 14px,#fff 14px,#fff 15px);"></div>
+          <div style="position:absolute;top:6px;right:6px;display:flex;flex-direction:column;gap:2px;">
+            <div style="background:rgba(15,20,40,0.9);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:#4fc3f7;font-size:12px;font-weight:700;">+</div>
+            <div style="background:rgba(15,20,40,0.9);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px;">−</div>
+          </div>
+        </div>
+        <!-- Bottom drawer (score panel) -->
+        <div style="background:#16213e;border-radius:4px;display:flex;align-items:center;padding:0 10px;gap:16px;overflow:hidden;">
+          <div style="color:#4fc3f7;font-size:9px;font-weight:700;letter-spacing:1px;">SCORE</div>
+          <div style="color:#81c784;font-size:16px;font-weight:800;">67.7%</div>
+          <div style="color:#aaa;font-size:8px;border-left:1px solid #0f3460;padding-left:10px;">34L bei 50mm · Klasse: Baum · Boden: Undurchlässig</div>
+          <div style="margin-left:auto;color:#4fc3f7;font-size:8px;">↑ Details</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Top Bar + Bottom Info-Drawer</h3>
+      <p>Schmale Top-Leiste für Suche und globale Controls. Karte in der Mitte. Unten ein aufklappbarer Drawer für Score-Details und Flächeninfos beim Klick. Ähnlich wie Google Maps Mobile. Maximale Karte bei gleichzeitig guter Lesbarkeit der Infos.</p>
+    </div>
+  </div>
+
+</div>

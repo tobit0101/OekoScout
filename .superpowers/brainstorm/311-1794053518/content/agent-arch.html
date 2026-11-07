@@ -1,0 +1,26 @@
+<h2>Agent-Architektur: Wie läuft die Queue?</h2>
+<p class="subtitle">Wenn ein Bürger einen Report einschickt — wie verarbeitet der Agent ihn?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Sofort (synchron)</h3>
+      <p>Beim Absenden wird der Agent direkt aufgerufen, der Bürger wartet ~5-10 Sek. auf das Ergebnis. Einfach, kein Queue-Overhead — aber bei vielen Meldungen gleichzeitig kann es hängen.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Queue (asynchron)</h3>
+      <p>Report landet in einer DB-Queue, ein Background-Worker holt ihn ab und verarbeitet ihn. Bürger sieht "In Bearbeitung" und kriegt später eine Benachrichtigung. Robuster, skalierbarer.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid: sofort + Queue für Mails</h3>
+      <p>Klassifizierung passiert sofort (schnell, ~2 Sek.), aber Mail-Versand und Backlog-Eintrag laufen async im Hintergrund. Beste UX + Zuverlässigkeit.</p>
+    </div>
+  </div>
+</div>

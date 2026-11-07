@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponge – Stadt-Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f4f6f8; color: #1a2332; font-family: 'Inter', sans-serif; padding: 32px; }
+  h1 { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #9ba8b6; margin-bottom: 28px; }
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #9ba8b6; margin-bottom: 12px; margin-top: 36px; }
+
+  /* ─── APP SHELL ─────────── */
+  .app { max-width: 820px; background: #fff; border: 1px solid #dde2e8; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+
+  /* Top nav */
+  .nav { display: flex; align-items: center; gap: 0; border-bottom: 1px solid #dde2e8; background: #fff; height: 52px; padding: 0 16px; }
+  .nav-logo { font-size: 14px; font-weight: 700; color: #1a6b3a; letter-spacing: .3px; padding-right: 20px; border-right: 1px solid #dde2e8; margin-right: 12px; }
+  .nav-search { display: flex; align-items: center; gap: 8px; background: #f4f6f8; border: 1px solid #dde2e8; border-radius: 6px; padding: 7px 12px; flex: 1; max-width: 360px; cursor: text; }
+  .nav-search-text { font-size: 12px; color: #9ba8b6; }
+  .nav-search-text span { color: #3d4f63; }
+  .nav-actions { display: flex; gap: 6px; margin-left: auto; }
+  .nav-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid #dde2e8; background: #fff; color: #5c6f82; font-family: 'Inter', sans-serif; transition: all .12s; }
+  .nav-btn:hover { background: #f4f6f8; }
+  .nav-btn.primary { background: #1a6b3a; border-color: #1a6b3a; color: #fff; }
+  .nav-btn.primary:hover { background: #155c31; }
+  .nav-btn.active { background: #edf5ef; border-color: #a8d5b5; color: #1a6b3a; }
+
+  /* Sidebar + map layout */
+  .body { display: grid; grid-template-columns: 272px 1fr; min-height: 460px; }
+  .sidebar { border-right: 1px solid #dde2e8; background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .sidebar-section { display: flex; flex-direction: column; gap: 8px; }
+  .sidebar-section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #9ba8b6; margin-bottom: 2px; }
+
+  /* Sidebar filter groups */
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 5px; cursor: pointer; transition: background .1s; }
+  .filter-row:hover { background: #f4f6f8; }
+  .filter-row input[type=checkbox] { accent-color: #1a6b3a; width: 13px; height: 13px; flex-shrink: 0; cursor: pointer; }
+  .filter-row-label { font-size: 12px; color: #3d4f63; flex: 1; }
+  .filter-dot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+  .filter-count { font-size: 10px; color: #9ba8b6; background: #f4f6f8; border-radius: 4px; padding: 1px 5px; }
+
+  /* Slider in sidebar */
+  .slider-wrap { padding: 2px 0; }
+  .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .slider-lbl { font-size: 11px; color: #5c6f82; font-weight: 500; }
+  .slider-val { font-size: 11px; font-weight: 700; color: #1a6b3a; background: #edf5ef; border: 1px solid #a8d5b5; border-radius: 4px; padding: 2px 7px; }
+  .slider-track { position: relative; height: 4px; background: #dde2e8; border-radius: 99px; }
+  .slider-fill { position: absolute; height: 100%; background: #1a6b3a; border-radius: 99px; left: 20%; width: 55%; }
+  .slider-thumb { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid #1a6b3a; top: 50%; transform: translate(-50%, -50%); cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .slider-thumb-l { left: 20%; }
+  .slider-thumb-r { left: 75%; }
+  .slider-marks { display: flex; justify-content: space-between; margin-top: 8px; }
+  .slider-mark { font-size: 9px; color: #c2cad4; }
+
+  /* Map area */
+  .map-area { position: relative; background: #e8ede4; overflow: hidden; }
+  .map-bg { position: absolute; inset: 0; }
+  .map-bg-streets { position: absolute; }
+  .map-toolbar { position: absolute; top: 12px; left: 12px; display: flex; gap: 4px; }
+  .map-tool-btn { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #dde2e8; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 500; color: #5c6f82; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.07); transition: all .12s; font-family: 'Inter', sans-serif; }
+  .map-tool-btn:hover { background: #f4f6f8; }
+  .map-tool-btn.active { background: #edf5ef; border-color: #a8d5b5; color: #1a6b3a; }
+  .map-zoom { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; background: #fff; border: 1px solid #dde2e8; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  .map-zoom-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 400; color: #5c6f82; cursor: pointer; border: none; background: transparent; transition: background .1s; font-family: 'Inter', sans-serif; }
+  .map-zoom-btn:hover { background: #f4f6f8; color: #1a6b3a; }
+  .map-zoom-sep { height: 1px; background: #dde2e8; }
+
+  /* Score popup */
+  .score-popup { position: absolute; bottom: 16px; right: 16px; background: #fff; border: 1px solid #dde2e8; border-radius: 8px; padding: 14px 16px; min-width: 200px; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+  .score-popup-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #9ba8b6; font-weight: 600; margin-bottom: 6px; }
+  .score-popup-main { display: flex; align-items: baseline; gap: 2px; margin-bottom: 8px; }
+  .score-popup-num { font-size: 36px; font-weight: 700; color: #1a6b3a; letter-spacing: -1.5px; line-height: 1; }
+  .score-popup-pct { font-size: 16px; font-weight: 600; color: #3a9960; }
+  .score-popup-bar { height: 4px; background: #f4f6f8; border-radius: 99px; margin-bottom: 8px; }
+  .score-popup-fill { height: 100%; width: 67.7%; background: linear-gradient(90deg, #1a6b3a, #3a9960); border-radius: 99px; }
+  .score-popup-rows { display: flex; flex-direction: column; gap: 3px; }
+  .score-popup-row { display: flex; justify-content: space-between; font-size: 11px; }
+  .score-popup-key { color: #9ba8b6; }
+  .score-popup-val { color: #3d4f63; font-weight: 500; }
+  .score-popup-val.highlight { color: #1a6b3a; font-weight: 600; }
+  .score-popup-sep { height: 1px; background: #f4f6f8; margin: 6px 0; }
+
+  /* Status bar */
+  .status-bar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #fafbfc; border-top: 1px solid #dde2e8; font-size: 11px; color: #9ba8b6; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #3a9960; flex-shrink: 0; }
+  .status-chips { display: flex; gap: 6px; }
+  .status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; border: 1px solid; }
+  .sc-wiese   { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+  .sc-baum    { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+  .sc-dach    { background: #ecfeff; border-color: #a5f3fc; color: #0e7490; }
+  .sc-inact   { background: #f4f6f8; border-color: #dde2e8; color: #9ba8b6; }
+  .sc-inact:hover { border-color: #a8d5b5; color: #1a6b3a; cursor: pointer; }
+
+  /* Individual components below */
+  .component-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 820px; }
+  .component-box { background: #fff; border: 1px solid #dde2e8; border-radius: 8px; padding: 20px; }
+
+  /* Standalone search */
+  .search-standalone { position: relative; }
+  .search-standalone input { width: 100%; background: #fff; border: 1px solid #dde2e8; border-radius: 6px; padding: 10px 14px 10px 38px; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2332; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,.05); transition: border-color .15s, box-shadow .15s; }
+  .search-standalone input:focus { border-color: #1a6b3a; box-shadow: 0 0 0 3px rgba(26,107,58,.08); }
+  .search-standalone input::placeholder { color: #9ba8b6; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ba8b6; }
+  .dropdown { background: #fff; border: 1px solid #dde2e8; border-radius: 6px; margin-top: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.08); overflow: hidden; }
+  .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; transition: background .1s; }
+  .dropdown-item:hover, .dropdown-item.hi { background: #f4f6f8; }
+  .dropdown-item.hi .di-title em { color: #1a6b3a; }
+  .di-icon { width: 26px; height: 26px; border-radius: 5px; background: #f4f6f8; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .di-title { font-size: 12px; font-weight: 500; color: #1a2332; }
+  .di-title em { color: #1a2332; font-style: normal; font-weight: 600; }
+  .di-sub { font-size: 10px; color: #9ba8b6; margin-top: 1px; }
+  .di-kbd { margin-left: auto; font-size: 9px; background: #f4f6f8; border: 1px solid #dde2e8; border-radius: 3px; padding: 1px 5px; color: #9ba8b6; font-family: monospace; }
+
+  /* Heatmap legend standalone */
+  .legend-bar { height: 10px; border-radius: 4px; background: linear-gradient(90deg, #a50026, #f46d43, #fee08b, #d9ef8b, #66bd63, #006837); margin-bottom: 5px; }
+  .legend-labels { display: flex; justify-content: space-between; font-size: 9px; color: #9ba8b6; margin-bottom: 10px; }
+  .legend-classes { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px; border-top: 1px solid #f4f6f8; }
+  .lc { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #5c6f82; }
+  .lc-dot { width: 9px; height: 9px; border-radius: 3px; }
+
+  /* Draw toolbar standalone */
+  .toolbar { display: inline-flex; background: #fff; border: 1px solid #dde2e8; border-radius: 6px; padding: 3px; gap: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .tb-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid transparent; background: transparent; color: #5c6f82; font-family: 'Inter', sans-serif; transition: all .12s; }
+  .tb-btn:hover { background: #f4f6f8; color: #3d4f63; }
+  .tb-btn.active { background: #edf5ef; border-color: #a8d5b5; color: #1a6b3a; }
+  .tb-sep { width: 1px; background: #dde2e8; margin: 3px 2px; }
+
+  /* Bottom info bar */
+  .info-bar { background: #fff; border: 1px solid #dde2e8; border-radius: 8px; box-shadow: 0 -2px 8px rgba(0,0,0,.06); }
+  .info-bar-handle { display: flex; justify-content: center; padding: 8px; border-bottom: 1px solid #f4f6f8; cursor: pointer; }
+  .info-bar-grip { width: 32px; height: 3px; background: #dde2e8; border-radius: 99px; }
+  .info-bar-body { display: flex; align-items: center; gap: 16px; padding: 12px 18px; }
+  .info-score { display: flex; align-items: baseline; gap: 2px; }
+  .info-score-num { font-size: 26px; font-weight: 700; color: #1a6b3a; letter-spacing: -1px; }
+  .info-score-pct { font-size: 13px; font-weight: 600; color: #3a9960; }
+  .info-sep { width: 1px; height: 36px; background: #f4f6f8; }
+  .info-meta { display: flex; flex-direction: column; gap: 3px; }
+  .info-meta-row { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #9ba8b6; }
+  .info-meta-val { color: #3d4f63; font-weight: 500; }
+  .info-meta-green { color: #1a6b3a; font-weight: 600; }
+  .info-cta { margin-left: auto; }
+  .info-cta-btn { display: flex; align-items: center; gap: 5px; background: #1a6b3a; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: background .12s; }
+  .info-cta-btn:hover { background: #155c31; }
+</style>
+</head>
+<body>
+
+<h1>Sponge – Stadt-Tool, Light Mode</h1>
+
+<!-- FULL APP -->
+<div class="section-label">App-Gesamtansicht (Sidebar-Layout für Verwaltung)</div>
+<div class="app">
+  <!-- Nav -->
+  <div class="nav">
+    <div class="nav-logo">Sponge</div>
+    <div class="nav-search">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ba8b6" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span class="nav-search-text">Adresse suchen <span>— z.B. Enzauenpark</span></span>
+    </div>
+    <div class="nav-actions">
+      <button class="nav-btn active">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filter
+      </button>
+      <button class="nav-btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Layer
+      </button>
+      <button class="nav-btn primary">Export</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Klasse</div>
+        <div class="filter-group">
+          <label class="filter-row">
+            <input type="checkbox" checked>
+            <div class="filter-dot" style="background:#22c55e;"></div>
+            <span class="filter-row-label">Wiese</span>
+            <span class="filter-count">4.812</span>
+          </label>
+          <label class="filter-row">
+            <input type="checkbox" checked>
+            <div class="filter-dot" style="background:#10b981;"></div>
+            <span class="filter-row-label">Baum</span>
+            <span class="filter-count">3.201</span>
+          </label>
+          <label class="filter-row">
+            <input type="checkbox" checked>
+            <div class="filter-dot" style="background:#06b6d4;"></div>
+            <span class="filter-row-label">Dach</span>
+            <span class="filter-count">9.540</span>
+          </label>
+          <label class="filter-row">
+            <input type="checkbox">
+            <div class="filter-dot" style="background:#f43f5e;"></div>
+            <span class="filter-row-label">Versiegelt</span>
+            <span class="filter-count">21.447</span>
+          </label>
+          <label class="filter-row">
+            <input type="checkbox">
+            <div class="filter-dot" style="background:#34d399;"></div>
+            <span class="filter-row-label">Gründach</span>
+            <span class="filter-count">412</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="height:1px;background:#f4f6f8;"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Score-Bereich</div>
+        <div class="slider-wrap">
+          <div class="slider-header">
+            <span class="slider-lbl">Sponge Score</span>
+            <span class="slider-val">20 – 75 %</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-fill"></div>
+            <div class="slider-thumb slider-thumb-l"></div>
+            <div class="slider-thumb slider-thumb-r"></div>
+          </div>
+          <div class="slider-marks">
+            <span class="slider-mark">0 %</span>
+            <span class="slider-mark">50 %</span>
+            <span class="slider-mark">100 %</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:#f4f6f8;"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Aussagekraft</div>
+        <div class="filter-group">
+          <label class="filter-row">
+            <input type="checkbox" checked>
+            <span class="filter-row-label">Bestätigt</span>
+            <span class="filter-count">12.340</span>
+          </label>
+          <label class="filter-row">
+            <input type="checkbox" checked>
+            <span class="filter-row-label">Nur Luftbild</span>
+            <span class="filter-count">8.120</span>
+          </label>
+          <label class="filter-row">
+            <input type="checkbox">
+            <span class="filter-row-label">Annahme</span>
+            <span class="filter-count">5.412</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-area">
+      <!-- OSM-like bg -->
+      <div style="position:absolute;inset:0;background:#e8ede4;">
+        <div style="position:absolute;left:0;top:36%;right:0;height:7px;background:#d0dbc9;"></div>
+        <div style="position:absolute;left:0;top:58%;right:0;height:5px;background:#d0dbc9;"></div>
+        <div style="position:absolute;left:30%;top:0;bottom:0;width:6px;background:#d0dbc9;"></div>
+        <div style="position:absolute;left:60%;top:0;bottom:0;width:4px;background:#d0dbc9;"></div>
+        <div style="position:absolute;left:0;top:50%;right:0;height:10px;background:#b3d9f7;opacity:.6;"></div>
+      </div>
+      <!-- Score cells -->
+      <div style="position:absolute;inset:0;opacity:.6;">
+        <div style="position:absolute;left:7%;top:15%;width:10%;height:18%;background:#15803d;border-radius:2px;opacity:.8;"></div>
+        <div style="position:absolute;left:19%;top:10%;width:8%;height:12%;background:#22c55e;border-radius:2px;opacity:.7;"></div>
+        <div style="position:absolute;left:42%;top:22%;width:15%;height:24%;background:#4ade80;border-radius:2px;opacity:.85;"></div>
+        <div style="position:absolute;left:59%;top:14%;width:9%;height:14%;background:#66bd63;border-radius:2px;opacity:.75;"></div>
+        <div style="position:absolute;left:27%;top:44%;width:12%;height:17%;background:#ca8a04;border-radius:2px;opacity:.6;"></div>
+        <div style="position:absolute;left:52%;top:57%;width:10%;height:12%;background:#eab308;border-radius:2px;opacity:.55;"></div>
+        <div style="position:absolute;left:7%;top:60%;width:16%;height:22%;background:#b91c1c;border-radius:2px;opacity:.6;"></div>
+        <div style="position:absolute;left:68%;top:46%;width:11%;height:16%;background:#f46d43;border-radius:2px;opacity:.6;"></div>
+        <div style="position:absolute;left:35%;top:65%;width:13%;height:15%;background:#ea580c;border-radius:2px;opacity:.65;"></div>
+        <!-- selected -->
+        <div style="position:absolute;left:40%;top:19%;width:19%;height:30%;border:2px solid #1a6b3a;border-radius:4px;box-shadow:0 0 0 1px rgba(26,107,58,.1);background:rgba(26,107,58,.04);"></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="map-toolbar">
+        <button class="map-tool-btn active">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Auswahl
+        </button>
+        <button class="map-tool-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>Fläche zeichnen
+        </button>
+      </div>
+
+      <!-- Zoom -->
+      <div class="map-zoom">
+        <button class="map-zoom-btn">+</button>
+        <div class="map-zoom-sep"></div>
+        <button class="map-zoom-btn">−</button>
+      </div>
+
+      <!-- Score popup -->
+      <div class="score-popup">
+        <div class="score-popup-label">Sponge Score · Zelle 479531</div>
+        <div class="score-popup-main">
+          <span class="score-popup-num">67.7</span>
+          <span class="score-popup-pct">%</span>
+        </div>
+        <div class="score-popup-bar"><div class="score-popup-fill"></div></div>
+        <div class="score-popup-rows">
+          <div class="score-popup-row">
+            <span class="score-popup-key">Abfluss</span>
+            <span class="score-popup-val highlight">34 L bei 50 mm</span>
+          </div>
+          <div class="score-popup-sep"></div>
+          <div class="score-popup-row">
+            <span class="score-popup-key">Klasse</span>
+            <span class="score-popup-val">Baum</span>
+          </div>
+          <div class="score-popup-row">
+            <span class="score-popup-key">Boden</span>
+            <span class="score-popup-val">Undurchlässig</span>
+          </div>
+          <div class="score-popup-row">
+            <span class="score-popup-key">Neigung</span>
+            <span class="score-popup-val">62 %</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <span>180.000 Zellen geladen</span>
+    <div style="width:1px;height:14px;background:#dde2e8;"></div>
+    <div class="status-chips">
+      <span class="status-chip sc-wiese">Wiese</span>
+      <span class="status-chip sc-baum">Baum</span>
+      <span class="status-chip sc-dach">Dach</span>
+      <span class="status-chip sc-inact">Versiegelt</span>
+    </div>
+    <span style="margin-left:auto;">Zoom 17 · Pforzheim · EPSG:4326</span>
+  </div>
+</div>
+
+<!-- COMPONENTS -->
+<div class="component-row" style="margin-top:40px;">
+  <div class="component-box">
+    <div class="section-label" style="margin-top:0;">Adresssuche</div>
+    <div class="search-standalone">
+      <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input value="Pforzheim Enz" placeholder="Adresse oder Ort suchen...">
+    </div>
+    <div class="dropdown" style="margin-top:4px;">
+      <div class="dropdown-item hi">
+        <div class="di-icon">📍</div>
+        <div>
+          <div class="di-title"><em>Pforzheim</em> Enzauenpark</div>
+          <div class="di-sub">Pforzheim, Baden-Württemberg</div>
+        </div>
+      </div>
+      <div class="dropdown-item">
+        <div class="di-icon">📍</div>
+        <div>
+          <div class="di-title"><em>Pforzheim</em> Enzstraße 12</div>
+          <div class="di-sub">75172 Pforzheim</div>
+        </div>
+        <span class="di-kbd">↵</span>
+      </div>
+      <div class="dropdown-item">
+        <div class="di-icon">🏘</div>
+        <div>
+          <div class="di-title"><em>Pforzheim</em> Nordstadt</div>
+          <div class="di-sub">Stadtteil · 12.400 Einwohner</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="component-box">
+    <div class="section-label" style="margin-top:0;">Heatmap-Legende</div>
+    <div class="legend-bar"></div>
+    <div class="legend-labels">
+      <span>11 %</span><span>30 %</span><span>50 %</span><span>75 %</span><span>85 %+</span>
+    </div>
+    <div class="legend-classes">
+      <div class="lc"><div class="lc-dot" style="background:#06b6d4;"></div>Dach</div>
+      <div class="lc"><div class="lc-dot" style="background:#f43f5e;"></div>Versiegelt</div>
+      <div class="lc"><div class="lc-dot" style="background:#22c55e;"></div>Wiese</div>
+      <div class="lc"><div class="lc-dot" style="background:#10b981;"></div>Baum</div>
+      <div class="lc"><div class="lc-dot" style="background:#34d399;"></div>Gründach</div>
+      <div class="lc"><div class="lc-dot" style="background:#60a5fa;"></div>Wasser</div>
+    </div>
+
+    <div class="section-label">Zeichen-Toolbar</div>
+    <div class="toolbar">
+      <button class="tb-btn active">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Auswahl
+      </button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>Fläche
+      </button>
+      <button class="tb-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Kreis
+      </button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Löschen
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="section-label">Info-Leiste (beim Klick auf eine Zelle)</div>
+<div class="info-bar" style="max-width:820px;">
+  <div class="info-bar-handle"><div class="info-bar-grip"></div></div>
+  <div class="info-bar-body">
+    <div class="info-score">
+      <span class="info-score-num">67.7</span>
+      <span class="info-score-pct">%</span>
+    </div>
+    <div class="info-sep"></div>
+    <div class="info-meta">
+      <div class="info-meta-row">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ba8b6" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/></svg>
+        Klasse <span class="info-meta-val">Baum</span>
+        &nbsp;·&nbsp;
+        Boden <span class="info-meta-val">Undurchlässig</span>
+        &nbsp;·&nbsp;
+        Neigung <span class="info-meta-val">62 %</span>
+      </div>
+      <div class="info-meta-row">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        Rückhalt <span class="info-meta-green">34 Liter</span>&nbsp; bei 50 mm Regen &nbsp;·&nbsp; Aussagekraft: <span class="info-meta-val">Bestätigt</span>
+      </div>
+    </div>
+    <div class="info-cta">
+      <button class="info-cta-btn">
+        Details ansehen
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

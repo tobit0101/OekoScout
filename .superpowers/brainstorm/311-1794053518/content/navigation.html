@@ -1,0 +1,100 @@
+<h2>Navigation: Wie wechselst du zwischen Report / Journey / Wishes?</h2>
+<p class="subtitle">Zwei Varianten für die Haupt-Navigation der Pforzheim-App</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Option A — Bottom Tab Bar</div>
+    <div class="mockup-body" style="padding:0">
+      <div style="background:#f5f0e8;min-height:380px;display:flex;flex-direction:column;border-radius:0 0 8px 8px;overflow:hidden">
+        <!-- Status bar -->
+        <div style="background:#c8b89a;padding:6px 16px;font-size:11px;color:#5a4a3a;display:flex;justify-content:space-between">
+          <span>9:41</span><span>Pforzheim</span><span>●●●</span>
+        </div>
+        <!-- Header -->
+        <div style="background:#b5a080;padding:14px 16px;color:#3a2e1e;font-weight:700;font-size:16px">
+          Meldung einreichen
+        </div>
+        <!-- Content -->
+        <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #ddd6c8;font-size:12px;color:#666">
+            📷  Screenshot hochladen
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #ddd6c8;font-size:12px;color:#666">
+            🏷️  Kategorie wählen
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #ddd6c8;font-size:12px;color:#666;height:60px">
+            ✏️  Beschreibung…
+          </div>
+          <div style="background:#8a7a5a;border-radius:8px;padding:10px;color:#fff;font-size:12px;font-weight:600;text-align:center">
+            Absenden
+          </div>
+        </div>
+        <!-- Bottom Nav -->
+        <div style="background:#3a2e1e;display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 0">
+          <div style="text-align:center;color:#b5a080;font-size:10px;padding:4px">
+            <div style="font-size:18px">📋</div>Report
+          </div>
+          <div style="text-align:center;color:#8a7a5a;font-size:10px;padding:4px">
+            <div style="font-size:18px">🗺️</div>Journey
+          </div>
+          <div style="text-align:center;color:#8a7a5a;font-size:10px;padding:4px">
+            <div style="font-size:18px">💡</div>Wishes
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Option B — Top Segment Control</div>
+    <div class="mockup-body" style="padding:0">
+      <div style="background:#f5f0e8;min-height:380px;display:flex;flex-direction:column;border-radius:0 0 8px 8px;overflow:hidden">
+        <!-- Status bar -->
+        <div style="background:#c8b89a;padding:6px 16px;font-size:11px;color:#5a4a3a;display:flex;justify-content:space-between">
+          <span>9:41</span><span>Pforzheim</span><span>●●●</span>
+        </div>
+        <!-- Header with tabs -->
+        <div style="background:#3a2e1e;padding:12px 16px 0">
+          <div style="color:#e8dcc8;font-weight:700;font-size:15px;margin-bottom:10px">Stadt Pforzheim</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px">
+            <div style="background:#b5a080;color:#3a2e1e;text-align:center;padding:8px 4px;font-size:11px;font-weight:700;border-radius:6px 6px 0 0">📋 Report</div>
+            <div style="background:#2a2018;color:#8a7a5a;text-align:center;padding:8px 4px;font-size:11px;border-radius:6px 6px 0 0">🗺️ Journey</div>
+            <div style="background:#2a2018;color:#8a7a5a;text-align:center;padding:8px 4px;font-size:11px;border-radius:6px 6px 0 0">💡 Wishes</div>
+          </div>
+        </div>
+        <!-- Content -->
+        <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #ddd6c8;font-size:12px;color:#666">
+            📷  Screenshot hochladen
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #ddd6c8;font-size:12px;color:#666">
+            🏷️  Kategorie wählen
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #ddd6c8;font-size:12px;color:#666;height:60px">
+            ✏️  Beschreibung…
+          </div>
+          <div style="background:#8a7a5a;border-radius:8px;padding:10px;color:#fff;font-size:12px;font-weight:600;text-align:center">
+            Absenden
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top:24px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Bottom Tab Bar</h3>
+      <p>Bekanntes Mobile-Pattern, Daumen-freundlich, viel Platz für Content oben.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Top Segment Control</h3>
+      <p>Web-nätiver, funktioniert gut auf Desktop + Mobile, Header und Navigation kompakt zusammen.</p>
+    </div>
+  </div>
+</div>

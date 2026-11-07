@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponge UI Components</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #080c10; color: #e2e8f0; font-family: 'Inter', sans-serif; min-height: 100vh; padding: 32px; }
+  h1 { font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #475569; margin-bottom: 32px; }
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #334155; margin-bottom: 14px; margin-top: 36px; }
+
+  /* SEARCH */
+  .search-wrap { position: relative; max-width: 420px; }
+  .search-input { width: 100%; background: #0f1923; border: 1px solid #1e2d3d; border-radius: 12px; padding: 13px 16px 13px 42px; font-size: 13px; font-family: 'Inter', sans-serif; color: #cbd5e1; outline: none; transition: border-color .2s, box-shadow .2s; }
+  .search-input:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.1); }
+  .search-input::placeholder { color: #334155; }
+  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #334155; pointer-events: none; }
+  .search-dropdown { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #0f1923; border: 1px solid #1e2d3d; border-radius: 12px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,.6); z-index: 100; }
+  .search-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; transition: background .15s; }
+  .search-item:hover, .search-item.active { background: #162030; }
+  .search-item-icon { width: 28px; height: 28px; border-radius: 8px; background: #162030; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .search-item-active .search-item-icon { background: rgba(34,197,94,.15); }
+  .search-item-main { font-size: 12px; font-weight: 500; color: #cbd5e1; }
+  .search-item-main em { color: #22c55e; font-style: normal; }
+  .search-item-sub { font-size: 10px; color: #475569; margin-top: 1px; }
+  .search-kbd { margin-left: auto; font-size: 9px; background: #162030; border: 1px solid #1e2d3d; border-radius: 4px; padding: 2px 6px; color: #475569; font-family: monospace; }
+
+  /* CHIPS */
+  .chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all .15s; user-select: none; }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .chip-x { opacity: .5; font-size: 10px; }
+  .chip-dach { background: rgba(14,116,144,.25); border-color: rgba(6,182,212,.2); color: #67e8f9; }
+  .chip-dach .chip-dot { background: #06b6d4; }
+  .chip-versiegelt { background: rgba(99,21,21,.25); border-color: rgba(239,68,68,.2); color: #fca5a5; }
+  .chip-versiegelt .chip-dot { background: #ef4444; }
+  .chip-wiese { background: rgba(20,83,45,.25); border-color: rgba(34,197,94,.2); color: #86efac; }
+  .chip-wiese .chip-dot { background: #22c55e; }
+  .chip-baum { background: rgba(20,83,45,.2); border-color: rgba(74,222,128,.15); color: #4ade80; }
+  .chip-baum .chip-dot { background: #4ade80; }
+  .chip-gruendach { background: rgba(5,46,22,.25); border-color: rgba(34,197,94,.15); color: #6ee7b7; }
+  .chip-gruendach .chip-dot { background: #10b981; }
+  .chip-inactive { background: #0f1923; border-color: #1e2d3d; color: #475569; }
+  .chip-add { background: transparent; border: 1px dashed #1e2d3d; color: #334155; }
+  .chip-add:hover { border-color: #22c55e; color: #22c55e; }
+
+  /* SLIDER */
+  .slider-wrap { max-width: 420px; }
+  .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .slider-label { font-size: 11px; font-weight: 500; color: #64748b; }
+  .slider-value { font-size: 12px; font-weight: 700; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2); color: #22c55e; padding: 2px 8px; border-radius: 6px; }
+  .slider-track { position: relative; height: 4px; background: #1e2d3d; border-radius: 99px; cursor: pointer; }
+  .slider-fill { position: absolute; height: 100%; background: linear-gradient(90deg, #16a34a, #22c55e); border-radius: 99px; left: 25%; width: 50%; }
+  .slider-thumb { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #22c55e; top: 50%; transform: translate(-50%, -50%); cursor: grab; box-shadow: 0 0 0 3px rgba(34,197,94,.15); }
+  .slider-thumb-left { left: 25%; }
+  .slider-thumb-right { left: 75%; }
+  .slider-marks { display: flex; justify-content: space-between; margin-top: 8px; }
+  .slider-mark { font-size: 9px; color: #334155; }
+  .slider-mark.active { color: #22c55e; font-weight: 600; }
+
+  /* SCORE CARD */
+  .score-card { max-width: 300px; background: #0b1520; border: 1px solid #1a2d40; border-radius: 16px; padding: 20px; position: relative; overflow: hidden; }
+  .score-card::before { content: ''; position: absolute; top: -40px; right: -40px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(34,197,94,.08) 0%, transparent 70%); pointer-events: none; }
+  .score-card-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #334155; margin-bottom: 4px; }
+  .score-card-title { font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 16px; }
+  .score-main { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 4px; }
+  .score-number { font-size: 52px; font-weight: 800; line-height: 1; color: #22c55e; letter-spacing: -2px; }
+  .score-unit { font-size: 20px; font-weight: 700; color: #16a34a; margin-bottom: 8px; }
+  .score-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.15); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #4ade80; font-weight: 500; margin-bottom: 16px; }
+  .score-divider { height: 1px; background: #1a2d40; margin-bottom: 14px; }
+  .score-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .score-stat-label { font-size: 9px; color: #334155; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+  .score-stat-value { font-size: 14px; font-weight: 700; color: #cbd5e1; }
+  .score-stat-unit { font-size: 10px; color: #475569; font-weight: 400; }
+  .score-bar-bg { height: 5px; background: #1a2d40; border-radius: 99px; overflow: hidden; }
+  .score-bar-fill { height: 100%; width: 67.7%; background: linear-gradient(90deg, #15803d, #22c55e, #4ade80); border-radius: 99px; }
+
+  /* DRAW TOOLBAR */
+  .draw-toolbar { display: inline-flex; background: #0b1520; border: 1px solid #1a2d40; border-radius: 12px; padding: 4px; gap: 2px; }
+  .draw-btn { display: flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid transparent; background: transparent; color: #475569; font-family: 'Inter', sans-serif; transition: all .15s; }
+  .draw-btn:hover { background: #162030; color: #94a3b8; }
+  .draw-btn.active { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.2); color: #22c55e; }
+  .draw-sep { width: 1px; background: #1a2d40; margin: 4px 2px; }
+
+  /* ZOOM */
+  .zoom-ctrl { display: flex; flex-direction: column; background: #0b1520; border: 1px solid #1a2d40; border-radius: 12px; overflow: hidden; width: 40px; }
+  .zoom-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; font-size: 18px; font-weight: 300; color: #475569; cursor: pointer; border: none; background: transparent; transition: all .15s; font-family: 'Inter', sans-serif; }
+  .zoom-btn:hover { background: #162030; color: #22c55e; }
+  .zoom-sep { height: 1px; background: #1a2d40; }
+  .zoom-level { display: flex; align-items: center; justify-content: center; height: 36px; font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #334155; border-top: 1px solid #1a2d40; }
+
+  /* HEATMAP LEGEND */
+  .heatmap-legend { max-width: 320px; background: #0b1520; border: 1px solid #1a2d40; border-radius: 12px; padding: 14px 16px; }
+  .heatmap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .heatmap-title { font-size: 11px; font-weight: 600; color: #64748b; }
+  .heatmap-toggle { font-size: 10px; color: #22c55e; cursor: pointer; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.15); border-radius: 6px; padding: 2px 8px; }
+  .heatmap-bar { height: 10px; border-radius: 99px; background: linear-gradient(90deg, #a50026, #f46d43, #fee08b, #d9ef8b, #66bd63, #006837); margin-bottom: 6px; }
+  .heatmap-labels { display: flex; justify-content: space-between; }
+  .heatmap-label { font-size: 9px; color: #334155; }
+  .heatmap-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #1a2d40; }
+  .heatmap-class { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #475569; }
+  .heatmap-class-dot { width: 8px; height: 8px; border-radius: 3px; }
+
+  /* BOTTOM DRAWER */
+  .bottom-drawer { max-width: 600px; background: #0b1520; border: 1px solid #1a2d40; border-top: none; border-radius: 0 0 16px 16px; overflow: hidden; }
+  .drawer-handle-wrap { display: flex; align-items: center; justify-content: center; padding: 10px; cursor: pointer; border-bottom: 1px solid #1a2d40; background: #0d1825; }
+  .drawer-handle { width: 36px; height: 4px; background: #1e2d3d; border-radius: 99px; }
+  .drawer-peek { display: flex; align-items: center; gap: 16px; padding: 12px 16px; }
+  .drawer-score-num { font-size: 22px; font-weight: 800; color: #22c55e; letter-spacing: -1px; }
+  .drawer-score-pct { font-size: 12px; color: #16a34a; font-weight: 700; }
+  .drawer-divider-v { width: 1px; height: 32px; background: #1a2d40; }
+  .drawer-meta { display: flex; flex-direction: column; gap: 2px; }
+  .drawer-meta-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #64748b; }
+  .drawer-meta-val { color: #94a3b8; font-weight: 500; }
+  .drawer-expand-btn { margin-left: auto; display: flex; align-items: center; gap: 4px; font-size: 10px; color: #22c55e; background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.15); border-radius: 8px; padding: 5px 10px; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
+
+  /* TOP BAR */
+  .top-bar-btn { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 6px 10px; border-radius: 8px; cursor: pointer; border: 1px solid #1a2d40; background: #0f1923; color: #64748b; font-family: 'Inter', sans-serif; transition: all .15s; }
+  .top-bar-btn:hover { border-color: #22c55e; color: #22c55e; }
+  .top-bar-btn.active { border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.08); color: #22c55e; }
+
+  /* APP PREVIEW */
+  .app-preview { max-width: 720px; border: 1px solid #1a2d40; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.7); }
+  .app-preview-topbar { background: rgba(11,21,32,.97); border-bottom: 1px solid #1a2d40; padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+  .app-preview-map { position: relative; height: 260px; background: radial-gradient(ellipse at 60% 40%, rgba(34,197,94,.06) 0%, transparent 60%), radial-gradient(ellipse at 20% 70%, rgba(6,182,212,.05) 0%, transparent 50%), linear-gradient(180deg, #0a1628 0%, #0d1f35 100%); overflow: hidden; }
+  .map-grid { position: absolute; inset: 0; opacity: .06; background-image: repeating-linear-gradient(0deg, transparent, transparent 29px, #4ade80 29px, #4ade80 30px), repeating-linear-gradient(90deg, transparent, transparent 29px, #4ade80 29px, #4ade80 30px); }
+  .app-preview-bottombar { background: rgba(11,21,32,.97); border-top: 1px solid #1a2d40; padding: 10px 14px; display: flex; align-items: center; gap: 14px; }
+  .float-panel { position: absolute; background: rgba(11,21,32,.92); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+</style>
+</head>
+<body>
+
+<h1>Sponge Web App — UI Components</h1>
+
+<!-- FULL APP PREVIEW -->
+<div class="section-label">App-Gesamtansicht</div>
+<div class="app-preview">
+  <div class="app-preview-topbar">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22c55e;padding:0 6px;white-space:nowrap;">SPONGE</div>
+    <div style="width:1px;height:20px;background:#1a2d40;"></div>
+    <div style="flex:1;display:flex;align-items:center;gap:7px;background:#0f1923;border:1px solid #1e2d3d;border-radius:8px;padding:6px 10px;cursor:text;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span style="font-size:11px;color:#334155;">Adresse suchen <em style="color:#94a3b8;font-style:normal;">— z.B. Pforzheim Enzauenpark</em></span>
+    </div>
+    <div style="display:flex;gap:5px;">
+      <button class="top-bar-btn active">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter
+      </button>
+      <button class="top-bar-btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Layer
+      </button>
+    </div>
+  </div>
+
+  <div class="app-preview-map">
+    <div class="map-grid"></div>
+    <div style="position:absolute;inset:0;opacity:.55;">
+      <div style="position:absolute;left:12%;top:20%;width:8%;height:14%;background:#15803d;border-radius:2px;opacity:.7;"></div>
+      <div style="position:absolute;left:22%;top:15%;width:6%;height:10%;background:#16a34a;border-radius:2px;opacity:.6;"></div>
+      <div style="position:absolute;left:45%;top:28%;width:13%;height:20%;background:#22c55e;border-radius:2px;opacity:.8;"></div>
+      <div style="position:absolute;left:60%;top:18%;width:7%;height:12%;background:#4ade80;border-radius:2px;opacity:.7;"></div>
+      <div style="position:absolute;left:30%;top:40%;width:10%;height:15%;background:#ca8a04;border-radius:2px;opacity:.6;"></div>
+      <div style="position:absolute;left:55%;top:52%;width:8%;height:10%;background:#eab308;border-radius:2px;opacity:.5;"></div>
+      <div style="position:absolute;left:10%;top:55%;width:14%;height:18%;background:#b91c1c;border-radius:2px;opacity:.6;"></div>
+      <div style="position:absolute;left:70%;top:42%;width:9%;height:14%;background:#dc2626;border-radius:2px;opacity:.5;"></div>
+      <div style="position:absolute;left:38%;top:60%;width:11%;height:13%;background:#ea580c;border-radius:2px;opacity:.6;"></div>
+      <div style="position:absolute;left:43%;top:25%;width:17%;height:26%;border:2px solid #22c55e;border-radius:4px;box-shadow:0 0 0 1px rgba(34,197,94,.2),0 0 20px rgba(34,197,94,.15);background:rgba(34,197,94,.04);"></div>
+    </div>
+
+    <!-- Zoom -->
+    <div class="float-panel" style="right:14px;top:14px;padding:2px;">
+      <button class="zoom-btn" style="height:34px;width:34px;font-size:16px;">+</button>
+      <div style="height:1px;background:#1a2d40;"></div>
+      <button class="zoom-btn" style="height:34px;width:34px;font-size:16px;">−</button>
+    </div>
+
+    <!-- Draw -->
+    <div class="float-panel" style="left:14px;top:14px;padding:3px;display:flex;gap:2px;">
+      <button style="width:32px;height:32px;border-radius:6px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      </button>
+      <button style="width:32px;height:32px;border-radius:6px;background:transparent;border:1px solid #1a2d40;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>
+      </button>
+      <div style="width:1px;background:#1a2d40;margin:4px 2px;"></div>
+      <button style="width:32px;height:32px;border-radius:6px;background:transparent;border:1px solid #1a2d40;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </button>
+    </div>
+
+    <!-- Score mini panel -->
+    <div class="float-panel" style="right:14px;bottom:14px;padding:10px 14px;min-width:160px;">
+      <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#334155;margin-bottom:6px;">Sponge Score</div>
+      <div style="display:flex;align-items:baseline;gap:3px;margin-bottom:6px;">
+        <span style="font-size:28px;font-weight:800;color:#22c55e;letter-spacing:-1px;line-height:1;">67.7</span>
+        <span style="font-size:13px;font-weight:700;color:#16a34a;">%</span>
+      </div>
+      <div style="height:3px;background:#162030;border-radius:99px;margin-bottom:6px;">
+        <div style="height:100%;width:67.7%;background:linear-gradient(90deg,#15803d,#4ade80);border-radius:99px;"></div>
+      </div>
+      <div style="font-size:10px;color:#475569;">💧 34 L bei 50 mm Regen</div>
+    </div>
+  </div>
+
+  <div class="app-preview-bottombar">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;flex-shrink:0;"></span>
+      <span style="font-size:11px;color:#64748b;white-space:nowrap;">1 Fläche markiert</span>
+    </div>
+    <div style="width:1px;height:20px;background:#1a2d40;flex-shrink:0;"></div>
+    <div class="chips-row" style="flex-wrap:nowrap;overflow:hidden;">
+      <div class="chip chip-wiese"><span class="chip-dot"></span>Wiese<span class="chip-x">×</span></div>
+      <div class="chip chip-baum"><span class="chip-dot"></span>Baum<span class="chip-x">×</span></div>
+      <div class="chip chip-dach"><span class="chip-dot"></span>Dach<span class="chip-x">×</span></div>
+      <div class="chip chip-inactive">Versiegelt</div>
+    </div>
+    <div style="margin-left:auto;font-size:10px;color:#334155;white-space:nowrap;">Zoom 17 · Pforzheim</div>
+  </div>
+</div>
+
+<!-- INDIVIDUAL COMPONENTS -->
+<div class="section-label" style="margin-top:48px;">Adresssuche mit Autovervollständigung</div>
+<div class="search-wrap">
+  <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  <input class="search-input" value="Pforzheim Enz" placeholder="Adresse oder Ort suchen...">
+  <div class="search-dropdown">
+    <div class="search-item active search-item-active">
+      <div class="search-item-icon">📍</div>
+      <div>
+        <div class="search-item-main"><em>Pforzheim</em> Enzauenpark</div>
+        <div class="search-item-sub">Pforzheim, Baden-Württemberg</div>
+      </div>
+    </div>
+    <div class="search-item">
+      <div class="search-item-icon">📍</div>
+      <div>
+        <div class="search-item-main"><em>Pforzheim</em> Enzstraße 12</div>
+        <div class="search-item-sub">75172 Pforzheim</div>
+      </div>
+      <span class="search-kbd">↵</span>
+    </div>
+    <div class="search-item">
+      <div class="search-item-icon">🏘</div>
+      <div>
+        <div class="search-item-main"><em>Pforzheim</em> Nordstadt</div>
+        <div class="search-item-sub">Stadtteil · 12.400 Einwohner</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label" style="margin-top:56px;">Filter-Chips (Klassen-Auswahl)</div>
+<div class="chips-row">
+  <div class="chip chip-dach"><span class="chip-dot"></span>Dach<span class="chip-x">×</span></div>
+  <div class="chip chip-versiegelt"><span class="chip-dot"></span>Versiegelt<span class="chip-x">×</span></div>
+  <div class="chip chip-wiese"><span class="chip-dot"></span>Wiese<span class="chip-x">×</span></div>
+  <div class="chip chip-baum"><span class="chip-dot"></span>Baum<span class="chip-x">×</span></div>
+  <div class="chip chip-gruendach"><span class="chip-dot"></span>Gründach<span class="chip-x">×</span></div>
+  <div class="chip chip-inactive">Wasser</div>
+  <div class="chip chip-add">+ Filter</div>
+</div>
+
+<div class="section-label" style="margin-top:36px;">Score-Filter (Range Slider)</div>
+<div class="slider-wrap">
+  <div class="slider-header">
+    <span class="slider-label">Sponge Score</span>
+    <span class="slider-value">25 % – 75 %</span>
+  </div>
+  <div class="slider-track">
+    <div class="slider-fill"></div>
+    <div class="slider-thumb slider-thumb-left"></div>
+    <div class="slider-thumb slider-thumb-right"></div>
+  </div>
+  <div class="slider-marks">
+    <span class="slider-mark">0 %</span>
+    <span class="slider-mark">25 %</span>
+    <span class="slider-mark active">50 %</span>
+    <span class="slider-mark">75 %</span>
+    <span class="slider-mark">100 %</span>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-top:36px;max-width:720px;">
+  <div>
+    <div class="section-label">Sponge Score Card</div>
+    <div class="score-card">
+      <div class="score-card-label">Schwammstadt-Index</div>
+      <div class="score-card-title">Enzauenpark – Zelle 479531</div>
+      <div class="score-main">
+        <span class="score-number">67.7</span>
+        <span class="score-unit">%</span>
+      </div>
+      <div class="score-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        Gut · Aussagekraft bestätigt
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+          <span style="font-size:9px;color:#334155;text-transform:uppercase;letter-spacing:1px;">Score</span>
+          <span style="font-size:9px;color:#22c55e;">67.7 / 100</span>
+        </div>
+        <div class="score-bar-bg"><div class="score-bar-fill"></div></div>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-stats">
+        <div>
+          <div class="score-stat-label">Abfluss</div>
+          <div class="score-stat-value">34 <span class="score-stat-unit">L / 50mm</span></div>
+        </div>
+        <div>
+          <div class="score-stat-label">Neigung</div>
+          <div class="score-stat-value">62 <span class="score-stat-unit">%</span></div>
+        </div>
+        <div>
+          <div class="score-stat-label">Klasse</div>
+          <div class="score-stat-value" style="font-size:12px;">Baum</div>
+        </div>
+        <div>
+          <div class="score-stat-label">Boden</div>
+          <div class="score-stat-value" style="font-size:11px;">Undurch<span class="score-stat-unit">lässig</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Zeichen-Toolbar (Flächen-Tool)</div>
+    <div class="draw-toolbar">
+      <button class="draw-btn active">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Zeigen
+      </button>
+      <div class="draw-sep"></div>
+      <button class="draw-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"/></svg>Fläche
+      </button>
+      <button class="draw-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Kreis
+      </button>
+      <div class="draw-sep"></div>
+      <button class="draw-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Löschen
+      </button>
+    </div>
+
+    <div class="section-label" style="margin-top:24px;">Zoom Controls</div>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <div class="zoom-ctrl">
+        <button class="zoom-btn">+</button>
+        <div class="zoom-sep"></div>
+        <button class="zoom-btn">−</button>
+        <div class="zoom-level">Z17</div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px;">Heatmap-Legende</div>
+    <div class="heatmap-legend">
+      <div class="heatmap-header">
+        <span class="heatmap-title">Sponge Score</span>
+        <span class="heatmap-toggle">Legende</span>
+      </div>
+      <div class="heatmap-bar"></div>
+      <div class="heatmap-labels">
+        <span class="heatmap-label">11 %</span>
+        <span class="heatmap-label">30 %</span>
+        <span class="heatmap-label">50 %</span>
+        <span class="heatmap-label">75 %</span>
+        <span class="heatmap-label">85 %+</span>
+      </div>
+      <div class="heatmap-classes">
+        <div class="heatmap-class"><div class="heatmap-class-dot" style="background:#06b6d4;"></div>Dach</div>
+        <div class="heatmap-class"><div class="heatmap-class-dot" style="background:#ef4444;"></div>Versiegelt</div>
+        <div class="heatmap-class"><div class="heatmap-class-dot" style="background:#22c55e;"></div>Wiese</div>
+        <div class="heatmap-class"><div class="heatmap-class-dot" style="background:#4ade80;"></div>Baum</div>
+        <div class="heatmap-class"><div class="heatmap-class-dot" style="background:#10b981;"></div>Gründach</div>
+        <div class="heatmap-class"><div class="heatmap-class-dot" style="background:#60a5fa;"></div>Wasser</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label" style="margin-top:36px;">Bottom Drawer — Info-Panel beim Zellen-Klick</div>
+<div class="bottom-drawer">
+  <div class="drawer-handle-wrap">
+    <div class="drawer-handle"></div>
+  </div>
+  <div class="drawer-peek">
+    <div style="display:flex;align-items:baseline;gap:3px;">
+      <span class="drawer-score-num">67.7</span>
+      <span class="drawer-score-pct">%</span>
+    </div>
+    <div class="drawer-divider-v"></div>
+    <div class="drawer-meta">
+      <div class="drawer-meta-row">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/></svg>
+        Klasse <span class="drawer-meta-val">Baum</span>
+        <span style="color:#334155;">·</span>
+        Boden <span class="drawer-meta-val">Undurchlässig</span>
+      </div>
+      <div class="drawer-meta-row">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        <span style="color:#22c55e;">34 L</span> Rückhalt bei 50 mm Regen
+      </div>
+    </div>
+    <button class="drawer-expand-btn">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      Details
+    </button>
+  </div>
+</div>
+
+</body>
+</html>

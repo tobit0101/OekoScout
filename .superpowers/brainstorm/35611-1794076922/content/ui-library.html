@@ -1,0 +1,118 @@
+<h2>UI-Bibliothek</h2>
+<p class="subtitle">Das bestimmt maßgeblich ob die App professionell oder "KI-gebaut" aussieht. Du willst keinen generischen Look — welche Basis passt am besten?</p>
+
+<div class="cards">
+
+  <!-- Option A: shadcn/ui + Tailwind -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f0f0f;padding:14px;border-radius:6px;font-family:'Inter',sans-serif;font-size:11px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Search input -->
+        <div style="display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span style="color:#555;font-size:11px;">Adresse suchen...</span>
+        </div>
+        <!-- Filter badges -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="border:1px solid #2a2a2a;border-radius:20px;padding:3px 10px;font-size:9px;color:#aaa;display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#22c55e;border-radius:50%;display:inline-block;"></span>Wiese</div>
+          <div style="border:1px solid #2a2a2a;border-radius:20px;padding:3px 10px;font-size:9px;color:#aaa;display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#3b82f6;border-radius:50%;display:inline-block;"></span>Dach</div>
+          <div style="background:#fff;border-radius:20px;padding:3px 10px;font-size:9px;color:#000;display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block;"></span>Versiegelt ×</div>
+        </div>
+        <!-- Score card -->
+        <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="color:#555;font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Sponge Score</div>
+            <div style="font-size:22px;font-weight:700;color:#fff;">67.7<span style="font-size:12px;color:#555;">%</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="color:#22c55e;font-size:11px;font-weight:600;">34 Liter</div>
+            <div style="color:#555;font-size:8px;">bei 50mm Regen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — shadcn/ui + Tailwind v4</h3>
+      <p>Minimalistisch, sehr hochwertig. Keine generische "Component Library"-Optik — Komponenten sind copy-paste in deinen Code. Verbreitet bei modernen SaaS-Apps. Passt perfekt zu deinem bestehenden Tailwind-Setup.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Radix UI + custom Tailwind (dark map theme) -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1117;padding:14px;border-radius:6px;font-family:'Inter',sans-serif;font-size:11px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Search -->
+        <div style="display:flex;align-items:center;gap:8px;background:#161b22;border:1px solid #21262d;border-radius:6px;padding:7px 12px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span style="color:#8b949e;font-size:11px;">Adresse suchen...</span>
+          <span style="margin-left:auto;background:#21262d;border-radius:4px;padding:1px 5px;font-size:9px;color:#8b949e;">⌘K</span>
+        </div>
+        <!-- Tag filters -->
+        <div style="display:flex;gap:4px;">
+          <div style="background:#0d419d;border:1px solid #1f6feb;border-radius:4px;padding:3px 8px;font-size:9px;color:#58a6ff;">Dach</div>
+          <div style="background:#0d2d09;border:1px solid #1a7f37;border-radius:4px;padding:3px 8px;font-size:9px;color:#3fb950;">Wiese</div>
+          <div style="background:#2d1b00;border:1px solid #9e6a03;border-radius:4px;padding:3px 8px;font-size:9px;color:#d29922;">Gründach</div>
+        </div>
+        <!-- Score display -->
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="color:#58a6ff;font-size:8px;text-transform:uppercase;letter-spacing:1px;">Score</div>
+              <div style="color:#e6edf3;font-size:20px;font-weight:700;line-height:1.2;">67.7%</div>
+            </div>
+            <div style="background:#1a7f37;border-radius:20px;padding:2px 8px;font-size:9px;color:#3fb950;">Gut</div>
+          </div>
+          <div style="margin-top:6px;background:#0d2d09;border-radius:4px;padding:4px 8px;font-size:9px;color:#7ee787;">⚡ 34L Retention bei 50mm Niederschlag</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — GitHub-Style Dark (Radix UI Primitives)</h3>
+      <p>Dunkel, technisch, präzise. GitHub/Linear-Ästhetik. Radix UI für zugängliche Primitives (Dialogs, Popover, Combobox) — du designst alles selbst mit Tailwind. Sehr professionell für ein Geodaten-Tool.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Mantine -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1a1b1e;padding:14px;border-radius:6px;font-family:'Inter',sans-serif;font-size:11px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Search with autocomplete look -->
+        <div style="background:#25262b;border:1px solid #373a40;border-radius:8px;padding:8px 12px;position:relative;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#909296" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <span style="color:#909296;font-size:11px;">Pforzheim Enz...</span>
+          </div>
+          <!-- Autocomplete dropdown -->
+          <div style="position:absolute;top:calc(100% + 4px);left:0;right:0;background:#25262b;border:1px solid #373a40;border-radius:8px;padding:4px;z-index:10;">
+            <div style="padding:5px 8px;border-radius:5px;background:#2c2e33;color:#c1c2c5;font-size:9px;">📍 Pforzheim, Enzkreis</div>
+            <div style="padding:5px 8px;color:#909296;font-size:9px;">📍 Pforzheim Nordstadt</div>
+          </div>
+        </div>
+        <!-- Spacer for dropdown -->
+        <div style="height:28px;"></div>
+        <!-- Chip filter -->
+        <div style="display:flex;gap:4px;margin-top:-4px;">
+          <div style="background:#1864ab;border-radius:20px;padding:3px 10px;font-size:9px;color:#a5d8ff;">Dach ×</div>
+          <div style="background:#2b8a3e;border-radius:20px;padding:3px 10px;font-size:9px;color:#b2f2bb;">Wiese ×</div>
+          <div style="border:1px dashed #373a40;border-radius:20px;padding:3px 10px;font-size:9px;color:#909296;">+ Filter</div>
+        </div>
+        <!-- Score with progress -->
+        <div style="background:#25262b;border-radius:8px;padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="color:#c1c2c5;font-size:9px;font-weight:600;">Sponge Score</span>
+            <span style="color:#40c057;font-size:12px;font-weight:700;">67.7%</span>
+          </div>
+          <div style="background:#373a40;border-radius:4px;height:5px;">
+            <div style="background:linear-gradient(90deg,#2f9e44,#40c057);width:67.7%;height:100%;border-radius:4px;"></div>
+          </div>
+          <div style="color:#909296;font-size:8px;margin-top:4px;">34 Liter Rückhalt · 50mm Referenzregen</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Mantine UI (Dark)</h3>
+      <p>Vollständige React-Komponentenbibliothek, besonders stark bei Inputs, Autocomplete, Slidern und Notifications. Sehr viele fertige Komponenten für genau die Features die du brauchst (Combobox, RangeSlider, Drawer). Schnellste Entwicklung.</p>
+    </div>
+  </div>
+
+</div>

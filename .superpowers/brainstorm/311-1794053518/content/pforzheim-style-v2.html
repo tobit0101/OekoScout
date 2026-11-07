@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  body { margin: 0; background: #e8e8e8; font-family: verdana, arial, helvetica, sans-serif; display: flex; justify-content: center; align-items: flex-start; padding: 32px 16px; min-height: 100vh; box-sizing: border-box; }
+
+  .phone {
+    background: #fff;
+    width: 360px;
+    min-height: 640px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .pf-header {
+    background: #202c39;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pf-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pf-logo-mark {
+    background: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 2px 5px;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .pf-logo-text {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .pf-header-icon { color: #aab0b8; font-size: 14px; }
+
+  .pf-tabs {
+    background: #56555e;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .pf-tab {
+    color: #b0afb8;
+    text-align: center;
+    padding: 11px 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.2px;
+  }
+  .pf-tab i { font-size: 15px; }
+  .pf-tab.active {
+    color: #fff;
+    border-bottom-color: #fff;
+    background: #46454e;
+  }
+
+  .pf-page-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .pf-page-header h1 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    color: #202c39;
+    font-weight: 700;
+  }
+  .pf-page-header p {
+    margin: 0;
+    font-size: 11px;
+    color: #777;
+  }
+
+  .pf-form { padding: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+
+  .pf-field-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #202c39;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+  }
+
+  .pf-upload {
+    border: 2px dashed #c8c8cc;
+    border-radius: 4px;
+    padding: 22px 16px;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .pf-upload i { font-size: 22px; color: #aaa; }
+
+  .pf-select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #aaa;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pf-textarea {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #bbb;
+    background: #fff;
+    height: 56px;
+  }
+  .pf-char-count { font-size: 10px; color: #aaa; text-align: right; margin-top: 2px; }
+
+  .pf-submit {
+    background: #202c39;
+    border-radius: 4px;
+    padding: 13px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.4px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .pf-footer {
+    background: #f4f4f4;
+    padding: 9px 16px;
+    font-size: 10px;
+    color: #999;
+    text-align: center;
+    border-top: 1px solid #e4e4e4;
+  }
+
+  /* Selection overlay */
+  .select-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 32px;
+  }
+  .select-note {
+    background: #202c39;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- Header -->
+  <div class="pf-header">
+    <div class="pf-logo">
+      <div class="pf-logo-mark">PF</div>
+      <div class="pf-logo-text">Stadt Pforzheim</div>
+    </div>
+    <i class="fa fa-bars pf-header-icon"></i>
+  </div>
+
+  <!-- Tabs -->
+  <div class="pf-tabs">
+    <div class="pf-tab active">
+      <i class="fa fa-triangle-exclamation"></i>
+      Report
+    </div>
+    <div class="pf-tab">
+      <i class="fa fa-hard-hat"></i>
+      Journey
+    </div>
+    <div class="pf-tab">
+      <i class="fa fa-lightbulb"></i>
+      Wishes
+    </div>
+  </div>
+
+  <!-- Page Header -->
+  <div class="pf-page-header">
+    <h1>Neue Meldung</h1>
+    <p>Melden Sie Probleme direkt an die Stadt Pforzheim</p>
+  </div>
+
+  <!-- Form -->
+  <div class="pf-form">
+    <div>
+      <div class="pf-field-label">Foto / Screenshot</div>
+      <div class="pf-upload">
+        <i class="fa fa-camera"></i>
+        <span>Foto aufnehmen oder hochladen</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="pf-field-label">Kategorie</div>
+      <div class="pf-select">
+        <span>Bitte wählen…</span>
+        <i class="fa fa-chevron-down" style="font-size:11px;color:#bbb"></i>
+      </div>
+    </div>
+
+    <div>
+      <div class="pf-field-label">Beschreibung <span style="color:#888;font-weight:400;text-transform:none;letter-spacing:0">(Pflichtfeld)</span></div>
+      <div class="pf-textarea">Kurze Beschreibung des Problems…</div>
+      <div class="pf-char-count">0 / 100</div>
+    </div>
+
+    <div class="pf-submit">
+      <i class="fa fa-paper-plane"></i>
+      Meldung absenden
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="pf-footer">
+    Stadt Pforzheim &middot; Bürgerservice &middot; Datenschutz
+  </div>
+</div>
+
+</body>
+</html>
