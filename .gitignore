@@ -16,6 +16,7 @@ data/
 # Env
 .env
 .env.*
+!.env.example
 
 # Tooling cache
 .vite/

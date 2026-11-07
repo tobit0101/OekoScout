@@ -8,7 +8,7 @@ Die Karte zeigt für jeden Quadratmeter im Rechengebiet den Schwamm Score: den A
 
 | Ordner | Inhalt |
 |---|---|
-| `frontend/` | React + Vite + Leaflet, Karten-Oberfläche |
+| `frontend/` | React + Vite + Google Maps (Fallback: Leaflet/OpenStreetMap), Karten-Oberfläche |
 | `backend/` | REST-API (FastAPI + DuckDB), liefert Schwamm Score je m², Kacheln, Regionen und Kennzahlen |
 | `data/` | Datendateien für das Backend, nicht im Git |
 | `docs/` | API-Vertrag ([`docs/api.md`](docs/api.md)), Datenmodell, Spezifikation |
@@ -43,6 +43,8 @@ npm run dev
 
 Der Entwicklungsserver läuft unter **http://localhost:5173/** und leitet `/api` an das Backend auf Port 8001 weiter.
 
+Optional: Für die Google-Maps-Karte `frontend/.env.example` nach `frontend/.env.local` kopieren und `VITE_GOOGLE_MAPS_API_KEY` eintragen. Der Key muss den Referrer `http://localhost:5173/*` erlauben. Ohne Key nutzt die App OpenStreetMap (Leaflet).
+
 ### Backend ohne Docker
 
 ```bash
@@ -56,7 +58,7 @@ pytest
 
 ## Kernfunktionen
 
-1. **Score-Heatmap je Quadratmeter**: Kachel-Ebene auf der Leaflet-Karte (Zoom ab 13), Farbskala von Rot (wenig Rückhalt) bis Dunkelgrün (viel Rückhalt), Zellen ohne Score grau. Die Ebene lässt sich ein- und ausblenden.
+1. **Score-Heatmap je Quadratmeter**: Kachel-Ebene auf der Google-Maps-Karte (Fallback: Leaflet/OpenStreetMap; Zoom ab 13), Farbskala von Rot (wenig Rückhalt) bis Dunkelgrün (viel Rückhalt), Zellen ohne Score grau. Die Ebene lässt sich ein- und ausblenden.
 2. **Regenmenge 30–80 mm**: Der Schieberegler wechselt zwischen den sechs Tagesregenmengen 30, 40, 50, 60, 70 und 80 mm. Je mehr Regen, desto kleiner der Score.
 3. **Score-Filter**: Der Bereichsfilter blendet Zellen außerhalb der gewählten Score-Spanne aus.
 4. **Zelldetails per Klick**: Score mit Einordnung, zurückgehaltene und abfließende Liter je m², Aussagekraft (Bestätigt, Nur Luftbild, Annahme, Widerspruch), getroffene Annahmen, Flächenklasse, Bodengruppe und Hangneigung.

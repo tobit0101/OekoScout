@@ -6,20 +6,10 @@ import { CellPopupController } from '../map/CellPopupController';
 import { COLORS } from '../theme';
 import type { RainKey } from '../types/api';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, HEATMAP_OPACITY } from '../map/mapConfig';
+import type { SpongeMapProps } from './mapTypes';
 
-interface SpongeMapProps {
-  rainKey: RainKey;
-  scoreMin: number;
-  scoreMax: number;
-  heatmapVisible: boolean;
-}
-
-const FALLBACK_CENTER: L.LatLngTuple = [48.9127, 8.7206];
-const FALLBACK_ZOOM = 15;
 const MAX_ZOOM = 20;
-const HEATMAP_MIN_ZOOM = 13;
-const HEATMAP_OPACITY = 0.75;
-const FILTER_DEBOUNCE_MS = 250;
 const TRANSPARENT_TILE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 
 function buildTileUrl(rainKey: RainKey, scoreMin: number, scoreMax: number): string {

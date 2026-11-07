@@ -3,12 +3,15 @@ import { InfoBar } from './components/InfoBar';
 import { Legend } from './components/Legend';
 import { NavBar } from './components/NavBar';
 import { Sidebar, SectionTitle } from './components/Sidebar';
+import { GoogleSpongeMap } from './components/GoogleSpongeMap';
 import { SpongeMap } from './components/SpongeMap';
 import { useStats } from './hooks/useStats';
+import { GOOGLE_MAPS_API_KEY } from './map/mapConfig';
 import { COLORS, FONT_FAMILY } from './theme';
 import type { RainKey } from './types/api';
 
 const DEFAULT_RAIN: RainKey = '50';
+const MapView = GOOGLE_MAPS_API_KEY ? GoogleSpongeMap : SpongeMap;
 
 export function App() {
   const [filterOpen, setFilterOpen] = useState(true);
@@ -53,7 +56,7 @@ export function App() {
         )}
 
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
-          <SpongeMap rainKey={rainKey} scoreMin={scoreMin} scoreMax={scoreMax} heatmapVisible={heatmapVisible} />
+          <MapView rainKey={rainKey} scoreMin={scoreMin} scoreMax={scoreMax} heatmapVisible={heatmapVisible} />
 
           {!filterOpen && (
             <div
