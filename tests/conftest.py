@@ -86,7 +86,11 @@ COPY (
          5.0, 5.0, 5.0, 5.0, 5.0, 5.0,
          'ANNAHME', 'GRUENDACH',
          'GRUENDACH_MIT_ABFLUSSBEIWERT_0_4;VEGETATION_IN_STRASSE_LUFTBILD_GILT',
-         'SEHR_DURCHLAESSIG', 0.0)
+         'SEHR_DURCHLAESSIG', 0.0),
+        ('479531_5417790', 479531, 5417790, 1, 48.9127159, 8.7206436,
+         20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
+         24.0, 24.0, 24.0, 24.0, 24.0, 24.0,
+         'BESTAETIGT', 'DACH', '', 'UNDURCHLAESSIG', 0.0)
     ) AS t(
         id, rechtswert, hochwert, region, breitengrad, laengengrad,
         score_prozent_30mm, score_prozent_40mm, score_prozent_50mm,

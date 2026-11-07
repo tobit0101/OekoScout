@@ -60,6 +60,19 @@ def test_cell_outside_404(client: TestClient) -> None:
     assert response.json() == {"detail": "Keine Zelle im Rechengebiet an dieser Koordinate"}
 
 
+def test_cell_lat_filter_404(client: TestClient) -> None:
+    response = client.get("/api/v1/cell", params={"lat": 48.0, "lng": 8.7206437})
+
+    assert response.status_code == 404
+
+
+def test_cell_nearest_uses_metric_distance(client: TestClient) -> None:
+    response = client.get("/api/v1/cell", params={"lat": 48.9127125, "lng": 8.7206518})
+
+    assert response.status_code == 200
+    assert response.json()["id"] == "479531_5417790"
+
+
 @pytest.mark.parametrize(
     "params",
     [

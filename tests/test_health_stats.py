@@ -7,14 +7,14 @@ from fastapi.testclient import TestClient
 def test_health_ok(client: TestClient) -> None:
     response = client.get("/api/v1/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "zellen": 3}
+    assert response.json() == {"status": "ok", "zellen": 4}
 
 
 def test_health_missing_parquet(client: TestClient, data_dir: Path) -> None:
     (data_dir / "zellen.parquet").unlink()
     response = client.get("/api/v1/health")
     assert response.status_code == 503
-    assert isinstance(response.json()["detail"], str)
+    assert response.json() == {"detail": "Zelldaten nicht lesbar"}
 
 
 def test_stats_returns_kennzahlen(client: TestClient, data_dir: Path) -> None:
@@ -28,7 +28,7 @@ def test_stats_missing_file(client: TestClient, data_dir: Path) -> None:
     (data_dir / "kennzahlen.json").unlink()
     response = client.get("/api/v1/stats")
     assert response.status_code == 503
-    assert isinstance(response.json()["detail"], str)
+    assert response.json() == {"detail": "Kennzahlen nicht lesbar"}
 
 
 def test_cors_header(client: TestClient) -> None:
