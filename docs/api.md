@@ -101,6 +101,12 @@ curl "http://localhost:8000/api/v1/cell?lat=48.9127069&lng=8.7206437"
   ]
 }
 ```
+Bereichsfehler enthalten zusätzlich `ctx` (z. B. `{ "le": 90.0 }`).
+
+**503**, wenn die Zelldaten nicht lesbar sind:
+```json
+{ "detail": "Zelldaten nicht lesbar" }
+```
 
 ### Wertelisten
 
@@ -182,7 +188,10 @@ curl "http://localhost:8000/api/v1/regions"
 | `properties.bbox_epsg25832` | `[minX, minY, maxX, maxY]` in EPSG:25832 (Meter) |
 | `geometry.type` | `Polygon` oder `MultiPolygon` |
 
-**503**, wenn die Datei fehlt: `{ "detail": "…" }`
+**503**, wenn die Datei fehlt:
+```json
+{ "detail": "Regionen nicht lesbar" }
+```
 
 ### Google Maps
 
@@ -218,7 +227,10 @@ Liefert die Kennzahlen zum Datensatz, z. B. für Legende, Skala oder ein Infopan
 
 > **Hinweis:** Die Schlüssel in `score_je_regenmenge` lauten `"30mm"`…`"80mm"`, in `/cell` dagegen `"30"`…`"80"`. Beide Formate kommen so aus den Quelldaten.
 
-**503**, wenn die Datei fehlt: `{ "detail": "…" }`
+**503**, wenn die Datei fehlt:
+```json
+{ "detail": "Kennzahlen nicht lesbar" }
+```
 
 ---
 
