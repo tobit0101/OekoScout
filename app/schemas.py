@@ -12,6 +12,18 @@ class HealthResponse(BaseModel):
     zellen: int
 
 
+class CellResponse(BaseModel):
+    id: str
+    region: int
+    klasse: str
+    aussagekraft: str
+    bodengruppe: str
+    neigung_prozent: float
+    annahmen: list[str]
+    score_prozent: dict[str, float | None]
+    abfluss_mm: dict[str, float | None]
+
+
 class ScoreSummary(BaseModel):
     min: float
     mittel: float

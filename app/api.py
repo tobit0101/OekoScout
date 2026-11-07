@@ -4,13 +4,25 @@ from functools import lru_cache
 from pathlib import Path
 
 import duckdb
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
-from app.schemas import ErrorResponse, HealthResponse, StatsResponse
+from app.schemas import CellResponse, ErrorResponse, HealthResponse, StatsResponse
 
 logger = logging.getLogger(__name__)
 
 RAIN_MM = (30, 40, 50, 60, 70, 80)
+
+CELL_SQL = f"""
+SELECT id, region, klasse, aussagekraft, bodengruppe,
+       round(neigung_prozent::DOUBLE, 1), annahmen,
+       {", ".join(f"round(score_prozent_{mm}mm::DOUBLE, 1)" for mm in RAIN_MM)},
+       {", ".join(f"round(abfluss_mm_{mm}mm::DOUBLE, 1)" for mm in RAIN_MM)}
+FROM zellen
+WHERE breitengrad BETWEEN $lat - 0.000015 AND $lat + 0.000015
+  AND laengengrad BETWEEN $lng - 0.000015 AND $lng + 0.000015
+ORDER BY power(breitengrad - $lat, 2) + power((laengengrad - $lng) * cos(radians($lat)), 2)
+LIMIT 1
+"""
 
 router = APIRouter(prefix="/api/v1")
 
@@ -34,18 +46,52 @@ def load_stats() -> StatsResponse:
     )
 
 
+def fetch_cell_row(sql: str, parameters: dict[str, float] | None = None) -> tuple | None:
+    try:
+        return connection().cursor().execute(sql, parameters).fetchone()
+    except (duckdb.Error, OSError) as error:
+        logger.warning("Cell data not readable: %s", error)
+        raise HTTPException(status_code=503, detail="Zelldaten nicht lesbar") from error
+
+
 @router.get(
     "/health",
     response_model=HealthResponse,
     responses={503: {"model": ErrorResponse}},
 )
 def health() -> HealthResponse:
-    try:
-        row = connection().cursor().execute("SELECT count(*) FROM zellen").fetchone()
-    except (duckdb.Error, OSError) as error:
-        logger.warning("Cell data not readable: %s", error)
-        raise HTTPException(status_code=503, detail="Zelldaten nicht lesbar") from error
+    row = fetch_cell_row("SELECT count(*) FROM zellen")
     return HealthResponse(status="ok", zellen=row[0])
+
+
+@router.get(
+    "/cell",
+    response_model=CellResponse,
+    responses={404: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+)
+def cell(
+    lat: float = Query(ge=-90, le=90),
+    lng: float = Query(ge=-180, le=180),
+) -> CellResponse:
+    row = fetch_cell_row(CELL_SQL, {"lat": lat, "lng": lng})
+    if row is None:
+        raise HTTPException(
+            status_code=404, detail="Keine Zelle im Rechengebiet an dieser Koordinate"
+        )
+    rain_count = len(RAIN_MM)
+    scores = row[7 : 7 + rain_count]
+    runoffs = row[7 + rain_count :]
+    return CellResponse(
+        id=row[0],
+        region=row[1],
+        klasse=row[2],
+        aussagekraft=row[3],
+        bodengruppe=row[4],
+        neigung_prozent=row[5],
+        annahmen=[item for item in row[6].split(";") if item],
+        score_prozent={str(mm): value for mm, value in zip(RAIN_MM, scores)},
+        abfluss_mm={str(mm): value for mm, value in zip(RAIN_MM, runoffs)},
+    )
 
 
 @router.get(
