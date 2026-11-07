@@ -156,6 +156,6 @@ def stats() -> StatsResponse:
 def regions() -> RegionCollection:
     try:
         return load_regions()
-    except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
+    except (OSError, ValueError) as error:
         logger.warning("Regions not readable: %s", error)
         raise HTTPException(status_code=503, detail="Regionen nicht lesbar") from error
