@@ -20,6 +20,7 @@ from app.schemas import (
 logger = logging.getLogger(__name__)
 
 RAIN_MM = (30, 40, 50, 60, 70, 80)
+FIXED_COLUMN_COUNT = 7
 
 CELL_SQL = f"""
 SELECT id, region, klasse, aussagekraft, bodengruppe,
@@ -29,7 +30,7 @@ SELECT id, region, klasse, aussagekraft, bodengruppe,
 FROM zellen
 WHERE breitengrad BETWEEN $lat - 0.000015 AND $lat + 0.000015
   AND laengengrad BETWEEN $lng - 0.000015 AND $lng + 0.000015
-ORDER BY power(breitengrad - $lat, 2) + power((laengengrad - $lng) * cos(radians($lat)), 2)
+ORDER BY power(breitengrad - $lat, 2) + power((laengengrad - $lng) * cos(radians($lat)), 2), id
 LIMIT 1
 """
 
@@ -87,7 +88,8 @@ def fetch_one(
     sql: str, parameters: dict[str, float] | None = None
 ) -> tuple[Any, ...] | None:
     try:
-        return connection().cursor().execute(sql, parameters).fetchone()
+        with connection().cursor() as cursor:
+            return cursor.execute(sql, parameters).fetchone()
     except (duckdb.Error, OSError) as error:
         logger.warning("Parquet query failed: %s", error)
         raise HTTPException(status_code=503, detail="Zelldaten nicht lesbar") from error
@@ -120,8 +122,8 @@ def cell(
             status_code=404, detail="Keine Zelle im Rechengebiet an dieser Koordinate"
         )
     rain_count = len(RAIN_MM)
-    scores = row[7 : 7 + rain_count]
-    runoffs = row[7 + rain_count :]
+    scores = row[FIXED_COLUMN_COUNT : FIXED_COLUMN_COUNT + rain_count]
+    runoffs = row[FIXED_COLUMN_COUNT + rain_count :]
     return CellResponse(
         id=row[0],
         region=row[1],
