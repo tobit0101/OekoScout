@@ -187,7 +187,10 @@ curl "http://localhost:8000/api/v1/regions"
 | `properties.bbox_epsg25832` | `[minX, minY, maxX, maxY]` in EPSG:25832 (Meter) |
 | `geometry.type` | `Polygon` oder `MultiPolygon` |
 
-**503**, wenn die Datei fehlt: `{ "detail": "…" }`
+**503**, wenn die Datei fehlt:
+```json
+{ "detail": "Regionen nicht lesbar" }
+```
 
 ### Google Maps
 
