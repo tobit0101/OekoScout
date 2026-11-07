@@ -3,6 +3,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from app.main import app
+
 
 def test_health_ok(client: TestClient) -> None:
     response = client.get("/api/v1/health")
@@ -13,6 +15,14 @@ def test_health_ok(client: TestClient) -> None:
 def test_health_missing_parquet(client: TestClient, data_dir: Path) -> None:
     (data_dir / "zellen.parquet").unlink()
     response = client.get("/api/v1/health")
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Zelldaten nicht lesbar"}
+
+
+def test_startup_survives_missing_parquet(data_dir: Path) -> None:
+    (data_dir / "zellen.parquet").unlink()
+    with TestClient(app) as started_client:
+        response = started_client.get("/api/v1/health")
     assert response.status_code == 503
     assert response.json() == {"detail": "Zelldaten nicht lesbar"}
 
