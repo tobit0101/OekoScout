@@ -12,6 +12,8 @@ Die Datendateien müssen im Ordner `./data` liegen:
 
 Sie sind nicht im Git-Repository enthalten (`data/` ist in `.gitignore`). Quelle: Hackathon-Datenpaket `10_backend`.
 
+Die Dateien in `./data` müssen im Container für UID 1000 lesbar sein (Standard 644 genügt).
+
 ## Start mit Docker
 
 ```bash

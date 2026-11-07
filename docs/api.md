@@ -101,6 +101,7 @@ curl "http://localhost:8000/api/v1/cell?lat=48.9127069&lng=8.7206437"
   ]
 }
 ```
+Bereichsfehler enthalten zusätzlich `ctx` (z. B. `{ "le": 90.0 }`).
 
 **503**, wenn die Zelldaten nicht lesbar sind:
 ```json
