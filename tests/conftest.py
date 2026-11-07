@@ -100,6 +100,8 @@ COPY (
 
 
 def clear_api_caches() -> None:
+    if api_module.connection.cache_info().currsize:
+        api_module.connection().close()
     for attribute in vars(api_module).values():
         cache_clear = getattr(attribute, "cache_clear", None)
         if callable(cache_clear):
