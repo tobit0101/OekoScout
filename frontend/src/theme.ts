@@ -5,6 +5,8 @@ export const COLORS = {
   surfaceAlt: '#D9EFEF',
   navy: '#2E296B',
   blue: '#7C97CD',
+  periwinkleText: '#5874B0',
+  cyanText: '#0A7F9C',
   lightBlue: '#D1EAF1',
   white: '#FFFFFF',
   text: '#1A2B2F',

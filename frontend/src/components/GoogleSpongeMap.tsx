@@ -10,8 +10,9 @@ import type { SpongeMapProps } from './mapTypes';
 
 const MAX_ZOOM = 21;
 const MIN_ZOOM = 11;
+const FOCUS_ZOOM = 18;
 
-export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible }: SpongeMapProps) {
+export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, focusTarget }: SpongeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<GoogleCellPopupController | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -80,6 +81,13 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible }:
   useEffect(() => {
     popupRef.current?.setRainKey(rainKey);
   }, [rainKey]);
+
+  useEffect(() => {
+    if (!map || !focusTarget) return;
+    const position = { lat: focusTarget.lat, lng: focusTarget.lng };
+    map.moveCamera({ center: position, zoom: FOCUS_ZOOM });
+    void popupRef.current?.openAt(position);
+  }, [map, focusTarget]);
 
   return <div ref={containerRef} role="application" aria-label="Karte: Schwamm Score Pforzheim" style={{ width: '100%', height: '100%' }} />;
 }

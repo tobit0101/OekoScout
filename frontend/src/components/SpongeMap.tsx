@@ -10,13 +10,14 @@ import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, H
 import type { SpongeMapProps } from './mapTypes';
 
 const MAX_ZOOM = 20;
+const FOCUS_ZOOM = 18;
 const TRANSPARENT_TILE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 
 function buildTileUrl(rainKey: RainKey, scoreMin: number, scoreMax: number): string {
   return `/api/v1/tiles/${rainKey}/{z}/{x}/{y}.png?score_min=${scoreMin}&score_max=${scoreMax}`;
 }
 
-export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible }: SpongeMapProps) {
+export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, focusTarget }: SpongeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const heatLayerRef = useRef<L.TileLayer | null>(null);
@@ -109,6 +110,14 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible }: Spong
   useEffect(() => {
     popupRef.current?.setRainKey(rainKey);
   }, [rainKey]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusTarget) return;
+    const position = L.latLng(focusTarget.lat, focusTarget.lng);
+    map.setView(position, FOCUS_ZOOM, { animate: false });
+    void popupRef.current?.openAt(position);
+  }, [focusTarget]);
 
   return <div ref={containerRef} role="application" aria-label="Karte: Schwamm Score Pforzheim" style={{ width: '100%', height: '100%' }} />;
 }

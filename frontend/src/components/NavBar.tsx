@@ -1,14 +1,18 @@
 import type { ReactNode } from 'react';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { COLORS } from '../theme';
+import { PlaceSearch, type SelectedPlace } from './search/PlaceSearch';
+
+const COMPACT_QUERY = '(max-width: 767px)';
 
 interface NavBarProps {
-  filterOpen: boolean;
   heatmapVisible: boolean;
-  onToggleFilter: () => void;
   onToggleHeatmap: () => void;
+  onSelectPlace: (place: SelectedPlace) => void;
 }
 
-export function NavBar({ filterOpen, heatmapVisible, onToggleFilter, onToggleHeatmap }: NavBarProps) {
+export function NavBar({ heatmapVisible, onToggleHeatmap, onSelectPlace }: NavBarProps) {
+  const compact = useMediaQuery(COMPACT_QUERY);
   return (
     <nav
       aria-label="Hauptnavigation"
@@ -25,43 +29,13 @@ export function NavBar({ filterOpen, heatmapVisible, onToggleFilter, onToggleHea
         zIndex: 100,
       }}
     >
-      <Brand />
+      <Brand compact={compact} />
 
-      <div
-        title="Folgt"
-        style={{
-          flex: 1,
-          maxWidth: 400,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          background: COLORS.pageLight,
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 6,
-          padding: '8px 12px',
-          opacity: 0.6,
-        }}
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2.5" aria-hidden="true">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-        <input
-          disabled
-          aria-label="Adresse oder Ort suchen (folgt)"
-          placeholder="Adresse oder Ort suchen..."
-          style={{ border: 'none', background: 'transparent', fontSize: 12, color: COLORS.text, outline: 'none', width: '100%', fontFamily: 'inherit' }}
-        />
-      </div>
+      <PlaceSearch onSelect={onSelectPlace} />
 
-      <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-        <NavButton pressed={filterOpen} onClick={onToggleFilter} icon={<FilterIcon />}>
-          Filter
-        </NavButton>
-        <NavButton pressed={heatmapVisible} onClick={onToggleHeatmap} icon={<HeatmapIcon />}>
-          Heatmap
-        </NavButton>
-        <NavButton disabled icon={<ExportIcon />}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto', flexShrink: 0 }}>
+        <HeatmapSwitch checked={heatmapVisible} onToggle={onToggleHeatmap} />
+        <NavButton disabled icon={<ExportIcon />} compact={compact}>
           Export
         </NavButton>
       </div>
@@ -69,45 +43,79 @@ export function NavBar({ filterOpen, heatmapVisible, onToggleFilter, onToggleHea
   );
 }
 
-function Brand() {
+function Brand({ compact }: { compact: boolean }) {
   return (
     <div
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        paddingRight: 16,
-        borderRight: `1px solid ${COLORS.border}`,
-        marginRight: 4,
+        paddingRight: compact ? 0 : 16,
+        borderRight: compact ? 'none' : `1px solid ${COLORS.border}`,
+        marginRight: compact ? 0 : 4,
         flexShrink: 0,
       }}
     >
       <img src="/icon.svg" alt="" height={30} style={{ height: 30, width: 'auto' }} />
-      <div style={{ color: COLORS.navy, textTransform: 'uppercase', lineHeight: 1.1 }}>
-        <div style={{ fontSize: 11, fontWeight: 400, letterSpacing: '2px' }}>Schwamm Score</div>
-        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '1px' }}>Pforzheim</div>
-      </div>
+      {!compact && (
+        <div style={{ color: COLORS.navy, textTransform: 'uppercase', lineHeight: 1.1 }}>
+          <div style={{ fontSize: 11, fontWeight: 400, letterSpacing: '2px' }}>Schwamm Score</div>
+          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '1px' }}>Pforzheim</div>
+        </div>
+      )}
     </div>
   );
 }
 
-interface NavButtonProps {
-  children: ReactNode;
-  icon: ReactNode;
-  pressed?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
+interface HeatmapSwitchProps {
+  checked: boolean;
+  onToggle: () => void;
 }
 
-function NavButton({ children, icon, pressed, disabled, onClick }: NavButtonProps) {
-  const isToggle = pressed !== undefined;
+function HeatmapSwitch({ checked, onToggle }: HeatmapSwitchProps) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      role="switch"
+      aria-checked={checked}
+      onClick={onToggle}
+      className="heatmap-switch"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '4px 2px',
+        border: 'none',
+        background: 'transparent',
+        fontFamily: 'inherit',
+        fontSize: 12,
+        fontWeight: 500,
+        color: COLORS.text,
+        cursor: 'pointer',
+      }}
+    >
+      Heatmap
+      <span className="heatmap-switch__track" aria-hidden="true">
+        <span className="heatmap-switch__knob" />
+      </span>
+    </button>
+  );
+}
+
+interface NavButtonProps {
+  children: string;
+  icon: ReactNode;
+  compact: boolean;
+  disabled?: boolean;
+}
+
+function NavButton({ children, icon, compact, disabled }: NavButtonProps) {
+  return (
+    <button
+      type="button"
       disabled={disabled}
       title={disabled ? 'Folgt' : undefined}
-      aria-pressed={isToggle ? pressed : undefined}
+      aria-label={compact ? children : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -115,37 +123,18 @@ function NavButton({ children, icon, pressed, disabled, onClick }: NavButtonProp
         padding: '6px 11px',
         borderRadius: 6,
         fontSize: 12,
-        fontWeight: pressed ? 600 : 500,
+        fontWeight: 500,
         fontFamily: 'inherit',
         color: COLORS.text,
-        background: pressed ? COLORS.lime : COLORS.white,
-        border: `1px solid ${pressed ? COLORS.lime : COLORS.border}`,
+        background: COLORS.white,
+        border: `1px solid ${COLORS.border}`,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.55 : 1,
       }}
     >
       {icon}
-      {children}
+      {!compact && children}
     </button>
-  );
-}
-
-function FilterIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-    </svg>
-  );
-}
-
-function HeatmapIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" />
-      <rect x="14" y="3" width="7" height="7" />
-      <rect x="14" y="14" width="7" height="7" />
-      <rect x="3" y="14" width="7" height="7" />
-    </svg>
   );
 }
 

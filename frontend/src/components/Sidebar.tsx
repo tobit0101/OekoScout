@@ -1,9 +1,21 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
+import type { CSSProperties, ReactNode, TransitionEvent } from 'react';
 import { RAIN_STEPS } from '../labels';
 import { COLORS, SIDEBAR_WIDTH } from '../theme';
 import type { RainKey, ScoreStats } from '../types/api';
 import { formatDecimal } from '../utils/format';
 import { Legend } from './Legend';
+import { SidebarCollapseButton } from './sidebar/SidebarCollapseButton';
+import { SidebarRail } from './sidebar/SidebarRail';
+import {
+  COLLAPSE_BUTTON_ID,
+  EXPAND_BUTTON_ID,
+  RAIL_WIDTH,
+  SECTION_FOCUS_IDS,
+  SIDEBAR_PANEL_ID,
+  type SidebarSection,
+} from './sidebar/sidebarIds';
+import './sidebar/sidebar.css';
 
 const MIN_SCORE_GAP = 5;
 const THUMB_SIZE = 16;
@@ -13,6 +25,9 @@ interface SidebarProps {
   scoreMax: number;
   rainKey: RainKey;
   rainStats: ScoreStats | undefined;
+  collapsed: boolean;
+  compact: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
   onScoreMinChange: (value: number) => void;
   onScoreMaxChange: (value: number) => void;
   onRainChange: (value: RainKey) => void;
@@ -22,26 +37,84 @@ function thumbOffset(percent: number): string {
   return `calc(${THUMB_SIZE / 2}px + (100% - ${THUMB_SIZE}px) * ${percent / 100})`;
 }
 
+const THEME_VARIABLES = {
+  '--sb-surface': COLORS.surface,
+  '--sb-border': COLORS.border,
+  '--sb-hover': COLORS.surfaceAlt,
+  '--sb-text': COLORS.navy,
+  '--sb-focus': COLORS.navy,
+} as CSSProperties;
+
+function dispatchMapResize(): void {
+  window.dispatchEvent(new Event('resize'));
+}
+
 export function Sidebar(props: SidebarProps) {
-  const { scoreMin, scoreMax, rainKey, rainStats, onScoreMinChange, onScoreMaxChange, onRainChange } = props;
+  const { scoreMin, scoreMax, rainKey, rainStats, collapsed, compact, onScoreMinChange, onScoreMaxChange, onRainChange, onCollapsedChange } = props;
   const rainIndex = RAIN_STEPS.indexOf(rainKey);
   const lastIndex = RAIN_STEPS.length - 1;
   const meanRetained = rainStats ? (Number(rainKey) * rainStats.mittel) / 100 : null;
+  const pendingFocusId = useRef<string | null>(null);
+  const isFirstRender = useRef(true);
+  const isOverlay = compact && !collapsed;
+  const asideWidth = collapsed ? RAIL_WIDTH : SIDEBAR_WIDTH;
+  const slotWidth = collapsed || compact ? RAIL_WIDTH : SIDEBAR_WIDTH;
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) dispatchMapResize();
+  }, [collapsed, compact]);
+
+  useEffect(() => {
+    const targetId = pendingFocusId.current;
+    if (!targetId) return;
+    pendingFocusId.current = null;
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.focus();
+    target.scrollIntoView({ block: 'nearest' });
+  }, [collapsed]);
+
+  const collapse = () => {
+    pendingFocusId.current = EXPAND_BUTTON_ID;
+    onCollapsedChange(true);
+  };
+
+  const expand = (section?: SidebarSection) => {
+    pendingFocusId.current = section ? SECTION_FOCUS_IDS[section] : COLLAPSE_BUTTON_ID;
+    onCollapsedChange(false);
+  };
+
+  const handleTransitionEnd = (event: TransitionEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget || event.propertyName !== 'width') return;
+    dispatchMapResize();
+  };
 
   return (
+    <div className="sidebar-slot" style={{ width: slotWidth }}>
     <aside
       aria-label="Filter und Legende"
-      style={{
-        width: SIDEBAR_WIDTH,
-        borderRight: `1px solid ${COLORS.border}`,
-        padding: 16,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        background: COLORS.surface,
-        overflowY: 'auto',
-      }}
+      className="sidebar"
+      data-overlay={isOverlay}
+      style={{ ...THEME_VARIABLES, width: asideWidth, zIndex: isOverlay ? 1100 : 1 }}
+      onTransitionEnd={handleTransitionEnd}
     >
+      <div className="sidebar-layer" data-hidden={!collapsed} inert={!collapsed} aria-hidden={!collapsed}>
+        <SidebarRail onExpand={expand} />
+      </div>
+      <div
+        id={SIDEBAR_PANEL_ID}
+        className="sidebar-layer"
+        data-hidden={collapsed}
+        inert={collapsed}
+        aria-hidden={collapsed}
+        style={{ width: SIDEBAR_WIDTH - 1 }}
+      >
+        <SidebarCollapseButton onCollapse={collapse} />
+        <div className="sidebar-scroll">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <section aria-labelledby="score-filter-title">
           <SectionTitle id="score-filter-title">Score Filter</SectionTitle>
@@ -57,6 +130,7 @@ export function Sidebar(props: SidebarProps) {
               style={{ left: thumbOffset(scoreMin), width: `calc((100% - ${THUMB_SIZE}px) * ${(scoreMax - scoreMin) / 100})` }}
             />
             <input
+              id={SECTION_FOCUS_IDS.score}
               type="range"
               min={0}
               max={100}
@@ -90,12 +164,12 @@ export function Sidebar(props: SidebarProps) {
         <section aria-labelledby="rain-title">
           <SectionTitle id="rain-title">Regenfall simulieren</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <label htmlFor="rain-range" style={{ fontSize: 12 }}>Niederschlag</label>
+            <label htmlFor={SECTION_FOCUS_IDS.rain}style={{ fontSize: 12 }}>Niederschlag</label>
             <ValueChip>{rainKey} mm</ValueChip>
           </div>
 
           <input
-            id="rain-range"
+            id={SECTION_FOCUS_IDS.rain}
             className="step-range"
             type="range"
             min={0}
@@ -147,11 +221,19 @@ export function Sidebar(props: SidebarProps) {
         </section>
       </div>
 
-      <div style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: 12, marginTop: 16 }}>
+      <div
+        id={SECTION_FOCUS_IDS.legend}
+        tabIndex={-1}
+        className="sidebar-focus-target"
+        style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: 12, marginTop: 16 }}
+      >
         <SectionTitle>Heatmap-Legende</SectionTitle>
         <Legend />
       </div>
+        </div>
+      </div>
     </aside>
+    </div>
   );
 }
 

@@ -1,27 +1,47 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { InfoBar } from './components/InfoBar';
 import { Legend } from './components/Legend';
 import { NavBar } from './components/NavBar';
 import { Sidebar, SectionTitle } from './components/Sidebar';
 import { GoogleSpongeMap } from './components/GoogleSpongeMap';
+import type { FocusTarget } from './components/mapTypes';
 import { SpongeMap } from './components/SpongeMap';
+import { useMediaQuery } from './hooks/useMediaQuery';
+import { usePersistentBoolean } from './hooks/usePersistentState';
 import { useStats } from './hooks/useStats';
 import { GOOGLE_MAPS_API_KEY } from './map/mapConfig';
 import { COLORS, FONT_FAMILY } from './theme';
 import type { RainKey } from './types/api';
 
 const DEFAULT_RAIN: RainKey = '50';
+const SIDEBAR_STORAGE_KEY = 'schwammscore.sidebarCollapsed';
+const COMPACT_QUERY = '(max-width: 767px)';
 const MapView = GOOGLE_MAPS_API_KEY ? GoogleSpongeMap : SpongeMap;
 
 export function App() {
-  const [filterOpen, setFilterOpen] = useState(true);
+  const compact = useMediaQuery(COMPACT_QUERY);
+  const [desktopCollapsed, setDesktopCollapsed] = usePersistentBoolean(SIDEBAR_STORAGE_KEY, false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const collapsed = compact ? !drawerOpen : desktopCollapsed;
+  const setSidebarCollapsed = (next: boolean) => (compact ? setDrawerOpen(!next) : setDesktopCollapsed(next));
   const [heatmapVisible, setHeatmapVisible] = useState(true);
   const [scoreMin, setScoreMin] = useState(0);
   const [scoreMax, setScoreMax] = useState(100);
   const [rainKey, setRainKey] = useState<RainKey>(DEFAULT_RAIN);
+  const [searchTarget, setSearchTarget] = useState<FocusTarget | null>(null);
   const statsState = useStats();
 
   const rainStats = statsState.status === 'ready' ? statsState.stats.score_je_regenmenge[`${rainKey}mm`] : undefined;
+  const drawerShown = compact && drawerOpen;
+
+  useEffect(() => {
+    if (!drawerShown) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDrawerOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [drawerShown]);
 
   return (
     <div
@@ -36,29 +56,37 @@ export function App() {
       }}
     >
       <NavBar
-        filterOpen={filterOpen}
         heatmapVisible={heatmapVisible}
-        onToggleFilter={() => setFilterOpen((open) => !open)}
         onToggleHeatmap={() => setHeatmapVisible((visible) => !visible)}
+        onSelectPlace={(place) => setSearchTarget((previous) => ({ ...place, nonce: (previous?.nonce ?? 0) + 1 }))}
       />
 
-      <main style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-        {filterOpen && (
-          <Sidebar
-            scoreMin={scoreMin}
-            scoreMax={scoreMax}
-            rainKey={rainKey}
-            rainStats={rainStats}
-            onScoreMinChange={setScoreMin}
-            onScoreMaxChange={setScoreMax}
-            onRainChange={setRainKey}
+      <main style={{ position: 'relative', zIndex: 0, flex: 1, display: 'flex', minHeight: 0 }}>
+        <Sidebar
+          scoreMin={scoreMin}
+          scoreMax={scoreMax}
+          rainKey={rainKey}
+          rainStats={rainStats}
+          collapsed={collapsed}
+          compact={compact}
+          onCollapsedChange={setSidebarCollapsed}
+          onScoreMinChange={setScoreMin}
+          onScoreMaxChange={setScoreMax}
+          onRainChange={setRainKey}
+        />
+
+        {compact && !collapsed && (
+          <div
+            aria-hidden="true"
+            onClick={() => setSidebarCollapsed(true)}
+            style={{ position: 'absolute', inset: 0, zIndex: 1099, background: 'rgba(26, 43, 47, 0.4)' }}
           />
         )}
 
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
-          <MapView rainKey={rainKey} scoreMin={scoreMin} scoreMax={scoreMax} heatmapVisible={heatmapVisible} />
+          <MapView rainKey={rainKey} scoreMin={scoreMin} scoreMax={scoreMax} heatmapVisible={heatmapVisible} focusTarget={searchTarget} />
 
-          {!filterOpen && (
+          {collapsed && (
             <div
               style={{
                 position: 'absolute',

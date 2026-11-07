@@ -11,6 +11,7 @@ export class CellLookup {
 
   constructor(
     private readonly isOpen: () => boolean,
+    private readonly onClose: () => void,
     private rainKey: RainKey,
   ) {}
 
@@ -21,7 +22,7 @@ export class CellLookup {
     try {
       const cell = await fetchCell(lat, lng);
       if (requestId !== this.requestId) return;
-      this.show(cell ? { kind: 'cell', cell } : { kind: 'outside' });
+      this.show(cell ? { kind: 'cell', cell, lat, lng } : { kind: 'outside' });
     } catch {
       if (requestId !== this.requestId) return;
       this.show({ kind: 'error' });
@@ -51,6 +52,6 @@ export class CellLookup {
 
   private render(): void {
     if (!this.state) return;
-    this.root.render(<CellPopup state={this.state} rainKey={this.rainKey} />);
+    this.root.render(<CellPopup state={this.state} rainKey={this.rainKey} onClose={this.onClose} />);
   }
 }

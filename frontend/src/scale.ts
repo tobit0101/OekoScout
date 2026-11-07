@@ -41,6 +41,26 @@ export function scoreColor(score: number): string {
   return rgbToHex(from.map((channel, i) => channel + (to[i] - channel) * t));
 }
 
+function relativeLuminance(rgb: readonly number[]): number {
+  const [r, g, b] = rgb.map((channel) => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+const MIN_TEXT_CONTRAST = 4.5;
+const DARKEN_STEP = 0.04;
+
+export function scoreTextColor(score: number): string {
+  const base = hexToRgb(scoreColor(score));
+  for (let amount = 0; amount < 1; amount += DARKEN_STEP) {
+    const mixed = base.map((channel) => channel * (1 - amount));
+    if (1.05 / (relativeLuminance(mixed) + 0.05) >= MIN_TEXT_CONTRAST) return rgbToHex(mixed);
+  }
+  return '#000000';
+}
+
 export function scoreLabel(score: number): string {
   if (score < 25) return 'Sehr gering';
   if (score < 40) return 'Gering';

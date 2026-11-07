@@ -3,7 +3,12 @@ import type { RainKey } from '../types/api';
 import { CellLookup } from './CellLookup';
 
 export class CellPopupController {
-  private readonly popup = L.popup({ maxWidth: 260, minWidth: 236, className: 'sponge-popup' });
+  private readonly popup = L.popup({
+    maxWidth: 300,
+    minWidth: 272,
+    className: 'sponge-popup',
+    closeButton: false,
+  });
   private readonly lookup: CellLookup;
   private readonly resizeObserver = new ResizeObserver(() => this.popup.update());
 
@@ -11,7 +16,11 @@ export class CellPopupController {
     private readonly map: L.Map,
     rainKey: RainKey,
   ) {
-    this.lookup = new CellLookup(() => this.map.hasLayer(this.popup), rainKey);
+    this.lookup = new CellLookup(
+      () => this.map.hasLayer(this.popup),
+      () => this.map.closePopup(this.popup),
+      rainKey,
+    );
     this.popup.setContent(this.lookup.container);
     this.resizeObserver.observe(this.lookup.container);
     this.popup.on('remove', () => this.lookup.reset());

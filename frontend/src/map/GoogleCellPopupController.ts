@@ -11,8 +11,16 @@ export class GoogleCellPopupController {
     private readonly map: google.maps.Map,
     rainKey: RainKey,
   ) {
-    this.lookup = new CellLookup(() => this.isOpen, rainKey);
-    this.infoWindow = new google.maps.InfoWindow({ content: this.lookup.container, maxWidth: 260 });
+    this.lookup = new CellLookup(
+      () => this.isOpen,
+      () => this.infoWindow.close(),
+      rainKey,
+    );
+    this.infoWindow = new google.maps.InfoWindow({
+      content: this.lookup.container,
+      maxWidth: 300,
+      headerDisabled: true,
+    });
     this.closeListener = this.infoWindow.addListener('close', () => {
       this.isOpen = false;
       this.lookup.reset();
