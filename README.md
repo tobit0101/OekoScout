@@ -17,13 +17,19 @@ Die Karte zeigt für jeden Quadratmeter im Rechengebiet den Schwamm Score: den A
 
 ### 1. Daten bereitstellen
 
-Die Datendateien kommen aus dem Hackathon-Datenpaket `10_backend` und gehören nach `./data`:
+Die Datendateien liegen im Repository unter `./data`:
 
-- `zellen.parquet`
+- `zellen.parquet` (74 MB, über [Git LFS](https://git-lfs.com))
 - `regionen.geojson`
 - `kennzahlen.json`
 
-Sie sind nicht im Git-Repository enthalten. Im Container müssen sie für UID 1000 lesbar sein (Standard 644 genügt).
+Git LFS muss vor dem Klonen installiert sein, sonst enthält `zellen.parquet` nur einen Platzhalter:
+
+```bash
+brew install git-lfs && git lfs install
+```
+
+Wurde schon ohne LFS geklont, holt `git lfs pull` die Datei nach. Im Container müssen die Dateien für UID 1000 lesbar sein (Standard 644 genügt).
 
 ### 2. Backend starten
 

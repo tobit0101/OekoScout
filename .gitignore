@@ -9,10 +9,6 @@ __pycache__/
 node_modules/
 dist/
 
-# Data files (too large for git)
-data/
-*.parquet
-
 # Env
 .env
 .env.*
