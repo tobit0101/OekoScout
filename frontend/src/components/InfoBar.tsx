@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { StatsState } from '../hooks/useStats';
 import { COLORS } from '../theme';
 import type { RainKey } from '../types/api';
-import { formatDecimal, formatInteger } from '../utils/format';
+import { formatDecimal } from '../utils/format';
 
 interface InfoBarProps {
   statsState: StatsState;
@@ -37,12 +37,9 @@ function StatsContent({ statsState, rainKey }: InfoBarProps) {
 
   const { stats } = statsState;
   const rainStats = stats.score_je_regenmenge[`${rainKey}mm`];
-  const withoutScore = stats.zeilen - stats.mit_score;
 
   return (
     <>
-      <span style={{ color: COLORS.text }}>{formatInteger(stats.mit_score)} Zellen mit Score</span>
-      <Separator />
       <span>
         ∅ Score: <strong style={{ color: COLORS.navy }}>{rainStats ? `${formatDecimal(rainStats.mittel)} %` : '—'}</strong> bei {rainKey} mm
       </span>
@@ -53,8 +50,6 @@ function StatsContent({ statsState, rainKey }: InfoBarProps) {
           {rainStats ? `${formatDecimal(rainStats.min)} – ${formatDecimal(rainStats.max)} %` : '—'}
         </strong>
       </span>
-      <Separator />
-      <span>{formatInteger(withoutScore)} Zellen ohne Score</span>
     </>
   );
 }
