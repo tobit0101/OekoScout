@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 
 from app.api import connection, load_regions, load_stats, router
 from app.area import router as area_router
+from app.simulation import router as simulation_router
 from app.tiles import data_extent
 from app.tiles import router as tiles_router
 
@@ -48,3 +49,4 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(area_router)
 app.include_router(tiles_router)
+app.include_router(simulation_router)

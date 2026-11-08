@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api as api_module
+import app.simulation as simulation_module
 import app.tiles as tiles_module
 from app.main import app
 
@@ -107,7 +108,7 @@ COPY (
 def clear_api_caches() -> None:
     if api_module.connection.cache_info().currsize:
         api_module.connection().close()
-    for module in (api_module, tiles_module):
+    for module in (api_module, tiles_module, simulation_module):
         for attribute in vars(module).values():
             cache_clear = getattr(attribute, "cache_clear", None)
             if callable(cache_clear):

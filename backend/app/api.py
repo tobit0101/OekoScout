@@ -41,11 +41,20 @@ def data_dir() -> Path:
     return Path(os.environ.get("DATA_DIR", "data"))
 
 
+def create_view(con: duckdb.DuckDBPyConnection, name: str, path: Path) -> None:
+    parquet_path = str(path).replace("'", "''")
+    con.execute(f"CREATE VIEW {name} AS SELECT * FROM read_parquet('{parquet_path}')")
+
+
 @lru_cache(maxsize=1)
 def connection() -> duckdb.DuckDBPyConnection:
-    parquet_path = str(data_dir() / "zellen.parquet").replace("'", "''")
     con = duckdb.connect()
-    con.execute(f"CREATE VIEW zellen AS SELECT * FROM read_parquet('{parquet_path}')")
+    create_view(con, "zellen", data_dir() / "zellen.parquet")
+    simulation_path = data_dir() / "simulation.parquet"
+    if simulation_path.exists():
+        create_view(con, "simulation", simulation_path)
+    else:
+        logger.warning("Simulation data missing: %s", simulation_path)
     return con
 
 

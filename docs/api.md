@@ -286,6 +286,75 @@ L.tileLayer('/api/v1/tiles/50/{z}/{x}/{y}.png?score_min=0&score_max=100', { minZ
 
 ---
 
+## `GET /simulation/tiles/{regen}/{stunde}/{z}/{x}/{y}.png`
+
+Liefert eine Heatmap-Kachel (256 × 256 px, PNG mit Alpha) der Tagessimulation im XYZ-Schema wie `/tiles`. Der Tagesregen `regen` fällt gleichmäßig über 24 h. Die Kachel zeigt in Blautönen, wie viel vom Regen des gesamten Tages zur Stunde `stunde` bereits im Boden gehalten wird. Bei `stunde` = 24 entspricht der Wert dem Score aus `/tiles` geteilt durch 100.
+
+| Parameter | Ort | Typ | Pflicht | Bereich |
+|---|---|---|---|---|
+| `regen` | Pfad | int | ja | 30, 40, 50, 60, 70, 80 (mm) |
+| `stunde` | Pfad | int | ja | 0 … 24 |
+| `z` | Pfad | int | ja | 0 … 22 |
+| `x`, `y` | Pfad | int | ja | 0 … 2^z − 1 |
+
+Es gibt keinen Score-Filter.
+
+**Formel**
+
+Regen gleichmäßig über 24 h verteilt, jede Zelle für sich (ohne Zufluss).
+
+```
+P_t              = regen · stunde / 24
+Q(P)             = anteil_versiegelt · q(P, s_versiegelt_mm)
+                 + anteil_wiese · q(P, s_wiese_mm)
+                 + anteil_baum · q(P, s_baum_mm)
+                 + linearer_abflussanteil · P
+q(P, S)          = (P − 0,2 · S)² / (P + 0,8 · S)   falls P > 0,2 · S, sonst 0
+gehalten_anteil  = (P_t − Q(P_t)) / regen
+```
+
+`gehalten_anteil` liegt zwischen 0 (Stunde 0, nichts gehalten) und 1 (alles gehalten). Alle Größen in mm.
+
+**Verhalten**
+
+- Jede Zelle mit Simulationsparametern erscheint in der Farbe der Skala unten, deckend (Alpha 255).
+- Zellen ohne Parameter (kein Score) sind grau (`#9E9E9E`), wie bei `/tiles`.
+- Pixel ohne Zelle sind transparent.
+- Bis Zoom 16 (1 Pixel ≥ 1 Zelle) wird je Pixel der Mittelwert von `gehalten_anteil` aller bewerteten Zellen gezeichnet. Ab Zoom 17 wird jede Zelle als Quadrat ihrer Fläche gezeichnet.
+- Unter Zoom 13 und außerhalb des Rechengebiets liefert die API eine vollständig transparente Kachel. Das Frontend sollte `minZoom: 13` setzen.
+- Antwortheader: `Content-Type: image/png`, `Cache-Control: public, max-age=300, must-revalidate`. Gerenderte Kacheln werden zusätzlich im Server-Speicher gehalten.
+
+**Farbskala** (lineare Interpolation in RGB, unter 0 und über 1 wird die erste bzw. letzte Farbe verwendet)
+
+| `gehalten_anteil` | Farbe |
+|---|---|
+| 0,0 | `#F4EBD0` |
+| 0,2 | `#D5E6C8` |
+| 0,4 | `#9FD1C2` |
+| 0,6 | `#5BB0B4` |
+| 0,8 | `#2B7F9A` |
+| 1,0 | `#0B4F6C` |
+| kein Score | `#9E9E9E` |
+
+```bash
+curl -o kachel.png "http://localhost:8001/api/v1/simulation/tiles/50/12/17/68711/45061.png"
+```
+
+### Leaflet
+
+```js
+L.tileLayer('/api/v1/simulation/tiles/50/12/{z}/{x}/{y}.png', { minZoom: 13, maxZoom: 20, opacity: 0.75 }).addTo(map);
+```
+
+**422**, wenn `regen` nicht in der Liste steht, `stunde` nicht in 0 … 24 liegt oder keine Ganzzahl ist, `x` oder `y` außerhalb des Bereichs für `z` liegen oder `z` > 22 ist.
+
+**503**, wenn die Simulationsdaten (`simulation.parquet`) fehlen oder nicht lesbar sind. Alle übrigen Endpunkte arbeiten dann weiter:
+```json
+{ "detail": "Simulationsdaten nicht lesbar" }
+```
+
+---
+
 ## `POST /area`
 
 Fasst alle Zellen innerhalb einer gezeichneten Fläche zusammen, z. B. für ein Infopanel zu einem Kreis, Rechteck oder Polygon auf der Karte. Das Frontend wandelt Kreise (64 Eckpunkte) und Rechtecke vorher in ein Polygon um.

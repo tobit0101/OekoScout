@@ -1,6 +1,7 @@
 import io
 import logging
 import math
+from collections.abc import Callable
 from functools import lru_cache
 from typing import Annotated
 
@@ -45,6 +46,8 @@ BBOX_SQL = (
     "breitengrad BETWEEN $south AND $north AND laengengrad BETWEEN $west AND $east"
 )
 
+ColorFunction = Callable[[NDArray[np.float64]], NDArray[np.uint8]]
+
 router = APIRouter(prefix="/api/v1")
 
 
@@ -59,11 +62,19 @@ STOP_CHANNELS = np.array(
 NO_SCORE_RGB = np.array(hex_to_rgb(NO_SCORE_COLOR), dtype=np.uint8)
 
 
-def score_to_rgb(scores: NDArray[np.float64]) -> NDArray[np.uint8]:
+def ramp_to_rgb(
+    values: NDArray[np.float64],
+    stop_values: NDArray[np.float64],
+    stop_channels: NDArray[np.float64],
+) -> NDArray[np.uint8]:
     channels = [
-        np.interp(scores, STOP_SCORES, STOP_CHANNELS[:, channel]) for channel in range(3)
+        np.interp(values, stop_values, stop_channels[:, channel]) for channel in range(3)
     ]
     return np.rint(np.stack(channels, axis=-1)).astype(np.uint8)
+
+
+def score_to_rgb(scores: NDArray[np.float64]) -> NDArray[np.uint8]:
+    return ramp_to_rgb(scores, STOP_SCORES, STOP_CHANNELS)
 
 
 def encode_png(rgba: NDArray[np.uint8]) -> bytes:
@@ -102,24 +113,23 @@ def data_extent() -> tuple[float, float, float, float]:
     return row
 
 
-def build_sql(regen: int, aggregate: bool) -> str:
-    score = f"score_prozent_{regen}mm::DOUBLE"
+def build_cell_sql(source: str, value_sql: str, digits: int, aggregate: bool) -> str:
     if not aggregate:
         return (
-            f"SELECT {PIXEL_X_SQL} AS px, {PIXEL_Y_SQL} AS py, round({score}, 2) AS score"
-            f" FROM zellen WHERE {BBOX_SQL}"
+            f"SELECT {PIXEL_X_SQL} AS px, {PIXEL_Y_SQL} AS py, round({value_sql}, {digits}) AS value"
+            f" FROM {source} WHERE {BBOX_SQL}"
         )
     return (
-        "SELECT px, py, round(avg(score), 2) AS score FROM ("
+        f"SELECT px, py, round(avg(value), {digits}) AS value FROM ("
         f"SELECT floor({PIXEL_X_SQL})::INTEGER AS px, floor({PIXEL_Y_SQL})::INTEGER AS py,"
-        f" {score} AS score FROM zellen WHERE {BBOX_SQL})"
+        f" {value_sql} AS value FROM {source} WHERE {BBOX_SQL})"
         f" WHERE px BETWEEN 0 AND {TILE_SIZE - 1} AND py BETWEEN 0 AND {TILE_SIZE - 1}"
         " GROUP BY px, py"
     )
 
 
 def query_tile_cells(
-    regen: int, zoom: int, x: int, y: int, aggregate: bool
+    sql: str, extra_parameters: dict[str, float], zoom: int, x: int, y: int
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
     south, north, west, east = tile_bounds(zoom, x, y)
     parameters = {
@@ -130,13 +140,14 @@ def query_tile_cells(
         "scale": float(TILE_SIZE * 2**zoom),
         "origin_x": float(x * TILE_SIZE),
         "origin_y": float(y * TILE_SIZE),
+        **extra_parameters,
     }
     with connection().cursor() as cursor:
-        columns = cursor.execute(build_sql(regen, aggregate), parameters).fetchnumpy()
+        columns = cursor.execute(sql, parameters).fetchnumpy()
     return (
         np.ma.filled(columns["px"].astype(np.float64), np.nan),
         np.ma.filled(columns["py"].astype(np.float64), np.nan),
-        np.ma.filled(columns["score"].astype(np.float64), np.nan),
+        np.ma.filled(columns["value"].astype(np.float64), np.nan),
     )
 
 
@@ -147,11 +158,17 @@ def visible_mask(scores: NDArray[np.float64], score_min: float, score_max: float
     return unscored | in_range
 
 
-def cell_colors(scores: NDArray[np.float64]) -> NDArray[np.uint8]:
-    colors = np.empty((scores.size, 3), dtype=np.uint8)
-    unscored = np.isnan(scores)
+def show_all(values: NDArray[np.float64]) -> NDArray[np.bool_]:
+    return np.ones(values.shape, dtype=np.bool_)
+
+
+def cell_colors(
+    values: NDArray[np.float64], to_rgb: ColorFunction = score_to_rgb
+) -> NDArray[np.uint8]:
+    colors = np.empty((values.size, 3), dtype=np.uint8)
+    unscored = np.isnan(values)
     colors[unscored] = NO_SCORE_RGB
-    colors[~unscored] = score_to_rgb(scores[~unscored])
+    colors[~unscored] = to_rgb(values[~unscored])
     return colors
 
 
@@ -159,14 +176,10 @@ def paint_pixels(
     rgba: NDArray[np.uint8],
     px: NDArray[np.float64],
     py: NDArray[np.float64],
-    scores: NDArray[np.float64],
-    score_min: float,
-    score_max: float,
+    colors: NDArray[np.uint8],
 ) -> None:
-    keep = visible_mask(scores, score_min, score_max)
-    colors = cell_colors(scores[keep])
-    rows = py[keep].astype(np.intp)
-    columns = px[keep].astype(np.intp)
+    rows = py.astype(np.intp)
+    columns = px.astype(np.intp)
     rgba[rows, columns, :3] = colors
     rgba[rows, columns, 3] = 255
 
@@ -175,18 +188,14 @@ def paint_footprints(
     rgba: NDArray[np.uint8],
     px: NDArray[np.float64],
     py: NDArray[np.float64],
-    scores: NDArray[np.float64],
+    colors: NDArray[np.uint8],
     half_cell_pixels: float,
-    score_min: float,
-    score_max: float,
 ) -> None:
-    keep = visible_mask(scores, score_min, score_max)
-    colors = cell_colors(scores[keep])
-    left = np.floor(px[keep] - half_cell_pixels + 0.5).astype(np.intp)
-    top = np.floor(py[keep] - half_cell_pixels + 0.5).astype(np.intp)
+    left = np.floor(px - half_cell_pixels + 0.5).astype(np.intp)
+    top = np.floor(py - half_cell_pixels + 0.5).astype(np.intp)
     far_edge = half_cell_pixels + 0.5 + FOOTPRINT_OVERLAP_PIXELS
-    right = np.maximum(np.floor(px[keep] + far_edge).astype(np.intp), left + 1)
-    bottom = np.maximum(np.floor(py[keep] + far_edge).astype(np.intp), top + 1)
+    right = np.maximum(np.floor(px + far_edge).astype(np.intp), left + 1)
+    bottom = np.maximum(np.floor(py + far_edge).astype(np.intp), top + 1)
     if left.size == 0:
         return
     for offset_y in range(int((bottom - top).max())):
@@ -199,9 +208,15 @@ def paint_footprints(
             rgba[rows[mask], columns[mask], 3] = 255
 
 
-@lru_cache(maxsize=TILE_CACHE_SIZE)
-def render_tile(
-    regen: int, zoom: int, x: int, y: int, score_min: float, score_max: float
+def render_cell_tile(
+    zoom: int,
+    x: int,
+    y: int,
+    build_sql: Callable[[bool], str],
+    extra_parameters: dict[str, float],
+    to_rgb: ColorFunction,
+    visible: Callable[[NDArray[np.float64]], NDArray[np.bool_]],
+    unavailable_detail: str,
 ) -> bytes:
     if zoom < MIN_RENDER_ZOOM:
         return transparent_png()
@@ -217,19 +232,40 @@ def render_tile(
             return transparent_png()
         pixel_meters = meters_per_pixel(zoom, (south + north) / 2)
         aggregate = pixel_meters >= CELL_SIZE_M
-        px, py, scores = query_tile_cells(regen, zoom, x, y, aggregate)
+        px, py, values = query_tile_cells(
+            build_sql(aggregate), extra_parameters, zoom, x, y
+        )
     except (duckdb.Error, OSError) as error:
         logger.warning("Tile query failed: %s", error)
-        raise HTTPException(status_code=503, detail="Zelldaten nicht lesbar") from error
+        raise HTTPException(status_code=503, detail=unavailable_detail) from error
     if px.size == 0:
         return transparent_png()
+    keep = visible(values)
+    colors = cell_colors(values[keep], to_rgb)
     rgba = np.zeros((TILE_SIZE, TILE_SIZE, 4), dtype=np.uint8)
     if aggregate:
-        paint_pixels(rgba, px, py, scores, score_min, score_max)
+        paint_pixels(rgba, px[keep], py[keep], colors)
     else:
         half_cell_pixels = CELL_SIZE_M / pixel_meters / 2
-        paint_footprints(rgba, px, py, scores, half_cell_pixels, score_min, score_max)
+        paint_footprints(rgba, px[keep], py[keep], colors, half_cell_pixels)
     return encode_png(rgba)
+
+
+@lru_cache(maxsize=TILE_CACHE_SIZE)
+def render_tile(
+    regen: int, zoom: int, x: int, y: int, score_min: float, score_max: float
+) -> bytes:
+    score = f"score_prozent_{regen}mm::DOUBLE"
+    return render_cell_tile(
+        zoom,
+        x,
+        y,
+        lambda aggregate: build_cell_sql("zellen", score, 2, aggregate),
+        {},
+        score_to_rgb,
+        lambda scores: visible_mask(scores, score_min, score_max),
+        "Zelldaten nicht lesbar",
+    )
 
 
 @router.get(
