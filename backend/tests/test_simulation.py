@@ -25,7 +25,7 @@ CELL_LINEAR = (48.9127159, 8.7206436)
 SCORED_CELLS = (CELL_MIXED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 ALL_CELLS = (CELL_MIXED, CELL_UNSCORED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 
-LIGHTEST = (0xD6, 0xEE, 0xFF, 0)
+LIGHTEST = (0xD6, 0xEE, 0xFF, round(0.85 * 255))
 DARKEST = (0x0A, 0x2A, 0x80, round(0.85 * 255))
 GREY = (0x9E, 0x9E, 0x9E, 0)
 COLOUR_TOLERANCE = 1
@@ -245,7 +245,7 @@ def test_colour_stops_are_exact() -> None:
         ]
     )
     assert (retained_to_rgba(shares) == expected).all()
-    assert [alpha for *_, alpha in expected] == [0, 217, 217, 217, 217, 217]
+    assert [alpha for *_, alpha in expected] == [217, 217, 217, 217, 217]
 
 
 def test_colour_interpolation_and_clamping() -> None:

@@ -317,7 +317,7 @@ gehalten_anteil  = (P_t − Q(P_t)) / regen
 
 **Verhalten**
 
-- Jede Zelle mit Simulationsparametern erscheint in der Farbe der Skala unten: Bei 0 ist sie durchsichtig, ab 4 % wird sie hellblau und mit steigendem Anteil dunkler blau (Deckkraft konstant 0,85).
+- Jede Zelle mit Simulationsparametern erscheint in der Farbe der Skala unten: ab Stunde 0 hellblau, mit steigendem Anteil dunkler blau (Deckkraft konstant 0,85). Durchsichtig ist nur, wo keine Daten vorliegen.
 - Zellen ohne Parameter (kein Score) sind durchsichtig, anders als bei `/tiles`, wo sie deckend grau sind.
 - Pixel ohne Zelle sind transparent.
 - Bis Zoom 16 (1 Pixel ≥ 1 Zelle) wird je Pixel der Mittelwert von `gehalten_anteil` aller bewerteten Zellen gezeichnet. Ab Zoom 17 wird jede Zelle als Quadrat ihrer Fläche gezeichnet.
@@ -328,8 +328,7 @@ gehalten_anteil  = (P_t − Q(P_t)) / regen
 
 | `gehalten_anteil` | Farbe | Alpha |
 |---|---|---|
-| 0,00 | `#D6EEFF` | 0,00 |
-| 0,04 | `#D6EEFF` | 0,85 |
+| 0,00 | `#D6EEFF` | 0,85 |
 | 0,25 | `#8CCBFF` | 0,85 |
 | 0,50 | `#3D95FF` | 0,85 |
 | 0,75 | `#1259D9` | 0,85 |

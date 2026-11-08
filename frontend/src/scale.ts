@@ -20,8 +20,7 @@ export interface SimulationColorStop {
 }
 
 export const SIMULATION_COLOR_STOPS: readonly SimulationColorStop[] = [
-  { value: 0, hex: '#D6EEFF', alpha: 0 },
-  { value: 0.04, hex: '#D6EEFF', alpha: 0.85 },
+  { value: 0, hex: '#D6EEFF', alpha: 0.85 },
   { value: 0.25, hex: '#8CCBFF', alpha: 0.85 },
   { value: 0.5, hex: '#3D95FF', alpha: 0.85 },
   { value: 0.75, hex: '#1259D9', alpha: 0.85 },

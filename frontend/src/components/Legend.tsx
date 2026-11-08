@@ -52,7 +52,7 @@ function SimulationLegend({ rainMm }: { rainMm: number }) {
       </div>
       <div
         role="img"
-        aria-label={`Farbskala Im Boden gehalten von durchsichtig (0 Liter pro Quadratmeter) über Hellblau bis Dunkelblau (${rainMm} Liter pro Quadratmeter)`}
+        aria-label={`Farbskala Im Boden gehalten von Hellblau (0 Liter pro Quadratmeter) bis Dunkelblau (${rainMm} Liter pro Quadratmeter)`}
         style={{ height: 10, borderRadius: 5, background: SIMULATION_GRADIENT_CSS, marginBottom: 4 }}
       />
       <div aria-hidden="true" style={{ position: 'relative', height: 14 }}>
