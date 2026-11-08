@@ -32,7 +32,7 @@ function Hero({ model }: { model: AreaInfoModel }) {
   return (
     <div className="area-info__hero">
       <div className="area-info__tile" style={{ borderTopColor: accent }}>
-        <div className="area-info__tile-label">⌀ Schwamm-Score bei {model.rainKey} mm</div>
+        <div className="area-info__tile-label">⌀ Schwamm Score bei {model.rainKey} mm</div>
         <div className="area-info__hero-value" style={{ color: textColor }}>
           {model.scoreText}
           {model.score !== null && <span className="area-info__hero-unit"> %</span>}

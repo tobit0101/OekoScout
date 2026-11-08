@@ -6,7 +6,7 @@ export function Legend() {
     <div style={{ fontSize: 11, color: COLORS.textMuted }}>
       <div
         role="img"
-        aria-label="Farbskala von rot (11 Prozent Rückhalt) über gelb bis dunkelgrün (85 Prozent Rückhalt)"
+        aria-label="Farbskala Schwamm Score von rot (11 Prozent) über gelb bis dunkelgrün (85 Prozent)"
         style={{ height: 10, borderRadius: 5, background: SCORE_GRADIENT_CSS, marginBottom: 4 }}
       />
       <div aria-hidden="true" style={{ position: 'relative', height: 14, margin: '0 10px' }}>

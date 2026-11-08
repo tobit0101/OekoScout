@@ -120,7 +120,7 @@ export function buildInfoClipboardText(model: AreaInfoModel): string {
     model.title,
     `Form und Mittelpunkt: ${model.subtitle}`,
     `Niederschlag: ${model.rainKey} mm`,
-    `⌀ Schwamm-Score: ${model.score === null ? model.scoreText : `${model.scoreText} % (${model.scoreCaption})`}`,
+    `⌀ Schwamm Score:${model.score === null ? model.scoreText : `${model.scoreText} % (${model.scoreCaption})`}`,
     `${model.retained.label}: ${model.retained.value}`,
     ...model.kpis.map((item) => `${item.label}: ${item.value}`),
     'Alle Regenmengen:',

@@ -38,7 +38,7 @@ export function buildCopyText(shape: AreaShape, stats: AreaStatsResponse, rainKe
     'Markierte Fläche',
     `Niederschlag: ${rainKey} mm`,
     `Mittelpunkt: ${shape.center.lat.toFixed(COORDINATE_DECIMALS)}, ${shape.center.lng.toFixed(COORDINATE_DECIMALS)}`,
-    `⌀ Schwamm-Score: ${formatScore(score)}${score === null ? '' : ` (${scoreLabel(score)})`}`,
+    `⌀ Schwamm Score:${formatScore(score)}${score === null ? '' : ` (${scoreLabel(score)})`}`,
     `Fläche: ${formatArea(stats.flaeche_m2)}`,
     `Zellen im Rechengebiet: ${formatInteger(stats.zellen)}`,
     `davon mit Score: ${formatInteger(stats.zellen_mit_score)}`,

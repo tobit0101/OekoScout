@@ -61,7 +61,7 @@ export function ScoreCard({ score, rainMm, retainedLitres, noScoreReason }: Scor
   return (
     <>
       <div style={{ ...sectionStyle, paddingBottom: 12 }}>
-        <div style={captionStyle}>{score === null ? 'Kein Score' : 'Schwamm-Score'}</div>
+        <div style={captionStyle}>{score === null ? 'Kein Score' : 'Schwamm Score'}</div>
         <div
           style={{
             display: 'flex',

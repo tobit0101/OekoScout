@@ -122,7 +122,7 @@ export function Sidebar(props: SidebarProps) {
         <section aria-labelledby="score-filter-title">
           <SectionTitle id="score-filter-title">Score Filter</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <span style={{ fontSize: 12 }}>Rückhalt-Score</span>
+            <span style={{ fontSize: 12 }}>Schwamm Score</span>
             <ValueChip>{scoreMin} – {scoreMax} %</ValueChip>
           </div>
 
@@ -138,7 +138,7 @@ export function Sidebar(props: SidebarProps) {
               min={0}
               max={100}
               value={scoreMin}
-              aria-label="Score von"
+              aria-label="Schwamm Score von"
               aria-valuetext={`${scoreMin} Prozent`}
               onChange={(event) => onScoreMinChange(Math.min(Number(event.target.value), scoreMax - MIN_SCORE_GAP))}
             />
@@ -147,7 +147,7 @@ export function Sidebar(props: SidebarProps) {
               min={0}
               max={100}
               value={scoreMax}
-              aria-label="Score bis"
+              aria-label="Schwamm Score bis"
               aria-valuetext={`${scoreMax} Prozent`}
               onChange={(event) => onScoreMaxChange(Math.max(Number(event.target.value), scoreMin + MIN_SCORE_GAP))}
             />

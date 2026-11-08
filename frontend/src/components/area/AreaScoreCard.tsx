@@ -29,7 +29,7 @@ export function AreaScoreCard({ score, rainKey }: AreaScoreCardProps) {
         {score !== null && <span style={{ fontSize: 14, fontWeight: 600 }}>%</span>}
       </div>
       <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>
-        ⌀ Schwamm-Score bei {rainKey} mm{score === null ? '' : ` · ${scoreLabel(score)}`}
+        ⌀ Schwamm Score bei {rainKey} mm{score === null ? '' : ` · ${scoreLabel(score)}`}
       </div>
       {score !== null && (
         <div aria-hidden="true" style={{ position: 'relative', height: 6, marginTop: 10, borderRadius: 3, background: SCORE_GRADIENT_CSS }}>
