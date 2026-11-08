@@ -15,7 +15,7 @@ import {
   FILTER_DEBOUNCE_MS,
   GOOGLE_MAP_STYLES,
   GOOGLE_MAPS_API_KEY,
-  HEATMAP_OPACITY,
+  SIMULATION_OPACITY,
 } from '../map/mapConfig';
 import { frameOpacities, REDUCED_MOTION_QUERY } from '../map/simulationFrames';
 import { AreaHintBand } from './area/AreaHintBand';
@@ -119,7 +119,7 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, s
   useEffect(() => {
     if (!map || !simulationActive) return;
     const { simulationHour: hour, reducedMotion: reduced } = simulationFrameRef.current;
-    const layers = addSimulationLayers(map, rainKey, frameOpacities(hour, HEATMAP_OPACITY, reduced));
+    const layers = addSimulationLayers(map, rainKey, frameOpacities(hour, SIMULATION_OPACITY, reduced));
     simulationLayersRef.current = layers;
     return () => {
       removeSimulationLayers(map, layers);
@@ -128,7 +128,7 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, s
   }, [map, simulationActive, rainKey]);
 
   useEffect(() => {
-    setSimulationOpacities(simulationLayersRef.current, frameOpacities(simulationHour, HEATMAP_OPACITY, reducedMotion));
+    setSimulationOpacities(simulationLayersRef.current, frameOpacities(simulationHour, SIMULATION_OPACITY, reducedMotion));
   }, [simulationHour, reducedMotion, simulationActive, rainKey, map]);
 
   useEffect(() => {

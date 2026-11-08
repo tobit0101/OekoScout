@@ -25,8 +25,8 @@ CELL_LINEAR = (48.9127159, 8.7206436)
 SCORED_CELLS = (CELL_MIXED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 ALL_CELLS = (CELL_MIXED, CELL_UNSCORED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 
-LIGHTEST = (0xF4, 0xEB, 0xD0, 255)
-DARKEST = (0x0B, 0x4F, 0x6C, 255)
+LIGHTEST = (0xFE, 0xEF, 0xD6, 255)
+DARKEST = (0x06, 0x41, 0x53, 255)
 COLOUR_TOLERANCE = 1
 
 CELL_PARAMETERS: dict[tuple[float, float], tuple[float, ...] | None] = {
@@ -240,7 +240,7 @@ def test_colour_stops_are_exact() -> None:
 
 def test_colour_interpolation_and_clamping() -> None:
     middle = retained_to_rgb(np.array([0.1]))[0]
-    expected = [round((a + b) / 2) for a, b in ((0xF4, 0xD5), (0xEB, 0xE6), (0xD0, 0xC8))]
+    expected = [round((a + b) / 2) for a, b in ((0xFE, 0xAB), (0xEF, 0xD3), (0xD6, 0xB4))]
     assert list(middle) == expected
     low, high = retained_to_rgb(np.array([-0.5, 1.5]))
     assert tuple(low) == LIGHTEST[:3]

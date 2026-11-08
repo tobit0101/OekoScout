@@ -14,12 +14,12 @@ export const SCORE_COLOR_STOPS: readonly ColorStop[] = [
 ];
 
 export const SIMULATION_COLOR_STOPS: readonly ColorStop[] = [
-  { score: 0, hex: '#F4EBD0' },
-  { score: 20, hex: '#D5E6C8' },
-  { score: 40, hex: '#9FD1C2' },
-  { score: 60, hex: '#5BB0B4' },
-  { score: 80, hex: '#2B7F9A' },
-  { score: 100, hex: '#0B4F6C' },
+  { score: 0, hex: '#FEEFD6' },
+  { score: 20, hex: '#ABD3B4' },
+  { score: 40, hex: '#5EB1A7' },
+  { score: 60, hex: '#1B8C8F' },
+  { score: 80, hex: '#0B6575' },
+  { score: 100, hex: '#064153' },
 ];
 
 export const SIMULATION_GRADIENT_CSS = `linear-gradient(90deg, ${SIMULATION_COLOR_STOPS.map(

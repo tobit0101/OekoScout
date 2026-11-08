@@ -328,12 +328,12 @@ gehalten_anteil  = (P_t − Q(P_t)) / regen
 
 | `gehalten_anteil` | Farbe |
 |---|---|
-| 0,0 | `#F4EBD0` |
-| 0,2 | `#D5E6C8` |
-| 0,4 | `#9FD1C2` |
-| 0,6 | `#5BB0B4` |
-| 0,8 | `#2B7F9A` |
-| 1,0 | `#0B4F6C` |
+| 0,0 | `#FEEFD6` |
+| 0,2 | `#ABD3B4` |
+| 0,4 | `#5EB1A7` |
+| 0,6 | `#1B8C8F` |
+| 0,8 | `#0B6575` |
+| 1,0 | `#064153` |
 | kein Score | `#9E9E9E` |
 
 ```bash

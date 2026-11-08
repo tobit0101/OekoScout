@@ -7,7 +7,7 @@ import { COLORS } from '../theme';
 import type { RainKey } from '../types/api';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useMediaQuery } from '../hooks/useMediaQuery';
-import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, HEATMAP_OPACITY, TILE_VERSION } from '../map/mapConfig';
+import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, HEATMAP_OPACITY, SIMULATION_OPACITY, TILE_VERSION } from '../map/mapConfig';
 import { frameOpacities, KEYFRAME_HOURS, REDUCED_MOTION_QUERY, simulationTileTemplate } from '../map/simulationFrames';
 import type { SpongeMapProps } from './mapTypes';
 
@@ -112,7 +112,7 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulat
     const map = mapRef.current;
     if (!map || !simulationActive) return;
     const { simulationHour: hour, reducedMotion: reduced } = simulationFrameRef.current;
-    const opacities = frameOpacities(hour, HEATMAP_OPACITY, reduced);
+    const opacities = frameOpacities(hour, SIMULATION_OPACITY, reduced);
     const layers = KEYFRAME_HOURS.map((keyframeHour, index) =>
       L.tileLayer(simulationTileTemplate(rainKey, keyframeHour), {
         minZoom: HEATMAP_MIN_ZOOM,
@@ -130,7 +130,7 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulat
   }, [simulationActive, rainKey]);
 
   useEffect(() => {
-    const opacities = frameOpacities(simulationHour, HEATMAP_OPACITY, reducedMotion);
+    const opacities = frameOpacities(simulationHour, SIMULATION_OPACITY, reducedMotion);
     simulationLayersRef.current.forEach((layer, index) => layer.setOpacity(opacities[index]));
   }, [simulationHour, reducedMotion, simulationActive, rainKey]);
 
