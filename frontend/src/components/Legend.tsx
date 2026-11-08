@@ -1,4 +1,12 @@
-import { LEGEND_TICKS, NO_SCORE_COLOR, SCORE_GRADIENT_CSS, SIMULATION_COLOR_STOPS, SIMULATION_GRADIENT_CSS, scalePosition } from '../scale';
+import {
+  LEGEND_TICKS,
+  NO_SCORE_COLOR,
+  NO_SCORE_SIMULATION_CSS,
+  SCORE_GRADIENT_CSS,
+  SIMULATION_GRADIENT_CSS,
+  SIMULATION_LEGEND_TICKS,
+  scalePosition,
+} from '../scale';
 import { COLORS } from '../theme';
 
 interface LegendProps {
@@ -44,35 +52,35 @@ function SimulationLegend({ rainMm }: { rainMm: number }) {
       </div>
       <div
         role="img"
-        aria-label={`Farbskala Im Boden gehalten von sandfarben (0 Liter pro Quadratmeter) bis tiefem Petrolblau (${rainMm} Liter pro Quadratmeter)`}
+        aria-label={`Farbskala Im Boden gehalten von durchsichtig (0 Liter pro Quadratmeter) bis kräftigem Blau (${rainMm} Liter pro Quadratmeter)`}
         style={{ height: 10, borderRadius: 5, background: SIMULATION_GRADIENT_CSS, marginBottom: 4 }}
       />
       <div aria-hidden="true" style={{ position: 'relative', height: 14 }}>
-        {SIMULATION_COLOR_STOPS.map((stop) => (
+        {SIMULATION_LEGEND_TICKS.map((tick) => (
           <span
-            key={stop.score}
+            key={tick}
             style={{
               position: 'absolute',
-              left: `${stop.score}%`,
-              transform: `translateX(-${stop.score}%)`,
+              left: `${tick * 100}%`,
+              transform: `translateX(-${tick * 100}%)`,
               fontSize: 10,
               whiteSpace: 'nowrap',
             }}
           >
-            {Math.round((stop.score / 100) * rainMm)}
+            {Math.round(tick * rainMm)}
           </span>
         ))}
       </div>
-      <NoScoreRow />
+      <NoScoreRow background={NO_SCORE_SIMULATION_CSS} />
       <div style={{ marginTop: 6, lineHeight: 1.4 }}>Regen gleichmäßig über 24 h verteilt · jeder m² für sich, ohne Zufluss</div>
     </div>
   );
 }
 
-function NoScoreRow() {
+function NoScoreRow({ background = NO_SCORE_COLOR }: { background?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, color: COLORS.text }}>
-      <span style={{ width: 14, height: 10, borderRadius: 2, background: NO_SCORE_COLOR, flexShrink: 0 }} />
+      <span style={{ width: 14, height: 10, borderRadius: 2, background, flexShrink: 0 }} />
       <span>Kein Score</span>
     </div>
   );

@@ -20,7 +20,7 @@ export function createHeatmapMapType(rainKey: RainKey, scoreMin: number, scoreMa
 
 const appliedHeatmaps = new WeakMap<google.maps.Map, google.maps.ImageMapType>();
 
-export function removeOverlay(map: google.maps.Map, mapType: google.maps.ImageMapType): void {
+export function removeOverlay(map: google.maps.Map, mapType: google.maps.MapType): void {
   const index = map.overlayMapTypes.getArray().indexOf(mapType);
   if (index >= 0) map.overlayMapTypes.removeAt(index);
 }

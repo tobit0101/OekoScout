@@ -7,8 +7,10 @@ import { COLORS } from '../theme';
 import type { RainKey } from '../types/api';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useMediaQuery } from '../hooks/useMediaQuery';
-import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, HEATMAP_OPACITY, SIMULATION_OPACITY, TILE_VERSION } from '../map/mapConfig';
-import { frameOpacities, KEYFRAME_HOURS, REDUCED_MOTION_QUERY, simulationTileTemplate } from '../map/simulationFrames';
+import { createSimulationLayer } from '../map/leafletSimulation';
+import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, HEATMAP_OPACITY, TILE_VERSION } from '../map/mapConfig';
+import { SimulationTileController } from '../map/simulationCanvas';
+import { REDUCED_MOTION_QUERY } from '../map/simulationFrames';
 import type { SpongeMapProps } from './mapTypes';
 
 const MAX_ZOOM = 20;
@@ -25,7 +27,7 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulat
   const heatLayerRef = useRef<L.TileLayer | null>(null);
   const popupRef = useRef<CellPopupController | null>(null);
   const appliedUrlRef = useRef('');
-  const simulationLayersRef = useRef<L.TileLayer[]>([]);
+  const simulationControllerRef = useRef<SimulationTileController | null>(null);
   const reducedMotion = useMediaQuery(REDUCED_MOTION_QUERY);
 
   const debouncedMin = useDebouncedValue(scoreMin, FILTER_DEBOUNCE_MS);
@@ -112,27 +114,23 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulat
     const map = mapRef.current;
     if (!map || !simulationActive) return;
     const { simulationHour: hour, reducedMotion: reduced } = simulationFrameRef.current;
-    const opacities = frameOpacities(hour, SIMULATION_OPACITY, reduced);
-    const layers = KEYFRAME_HOURS.map((keyframeHour, index) =>
-      L.tileLayer(simulationTileTemplate(rainKey, keyframeHour), {
-        minZoom: HEATMAP_MIN_ZOOM,
-        maxZoom: MAX_ZOOM,
-        opacity: opacities[index],
-        attribution: index === 0 ? ATTRIBUTION_SCORE : undefined,
-        errorTileUrl: TRANSPARENT_TILE,
-      }).addTo(map),
-    );
-    simulationLayersRef.current = layers;
+    const controller = new SimulationTileController(rainKey, hour, reduced);
+    const layer = createSimulationLayer(controller, MAX_ZOOM).addTo(map);
+    simulationControllerRef.current = controller;
     return () => {
-      layers.forEach((layer) => layer.remove());
-      simulationLayersRef.current = [];
+      layer.remove();
+      controller.dispose();
+      simulationControllerRef.current = null;
     };
   }, [simulationActive, rainKey]);
 
   useEffect(() => {
-    const opacities = frameOpacities(simulationHour, SIMULATION_OPACITY, reducedMotion);
-    simulationLayersRef.current.forEach((layer, index) => layer.setOpacity(opacities[index]));
-  }, [simulationHour, reducedMotion, simulationActive, rainKey]);
+    simulationControllerRef.current?.setHour(simulationHour);
+  }, [simulationHour]);
+
+  useEffect(() => {
+    simulationControllerRef.current?.setReducedMotion(reducedMotion);
+  }, [reducedMotion]);
 
   useEffect(() => {
     const layer = heatLayerRef.current;

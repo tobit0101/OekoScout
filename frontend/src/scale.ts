@@ -13,20 +13,40 @@ export const SCORE_COLOR_STOPS: readonly ColorStop[] = [
   { score: 85, hex: '#1A9850' },
 ];
 
-export const SIMULATION_COLOR_STOPS: readonly ColorStop[] = [
-  { score: 0, hex: '#FEEFD6' },
-  { score: 20, hex: '#ABD3B4' },
-  { score: 40, hex: '#5EB1A7' },
-  { score: 60, hex: '#1B8C8F' },
-  { score: 80, hex: '#0B6575' },
-  { score: 100, hex: '#064153' },
+export interface SimulationColorStop {
+  value: number;
+  hex: string;
+  alpha: number;
+}
+
+export const SIMULATION_COLOR_STOPS: readonly SimulationColorStop[] = [
+  { value: 0, hex: '#9BE7FF', alpha: 0 },
+  { value: 0.1, hex: '#6FD3FF', alpha: 0.25 },
+  { value: 0.3, hex: '#2FA8FF', alpha: 0.55 },
+  { value: 0.55, hex: '#0A7CFF', alpha: 0.75 },
+  { value: 0.8, hex: '#0050E6', alpha: 0.88 },
+  { value: 1, hex: '#1A2FCC', alpha: 0.95 },
 ];
 
-export const SIMULATION_GRADIENT_CSS = `linear-gradient(90deg, ${SIMULATION_COLOR_STOPS.map(
-  (stop) => `${stop.hex} ${stop.score}%`,
-).join(', ')})`;
+export const SIMULATION_LEGEND_TICKS: readonly number[] = [0, 0.2, 0.4, 0.6, 0.8, 1];
 
 export const NO_SCORE_COLOR = '#9E9E9E';
+const NO_SCORE_SIMULATION_ALPHA = 0.45;
+
+const LEGEND_CHECKERBOARD_CSS = 'repeating-conic-gradient(#C4C4C4 0% 25%, #EDEDED 0% 50%) 0 0 / 8px 8px';
+
+function rgba(hex: string, alpha: number): string {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export const SIMULATION_GRADIENT_CSS = `linear-gradient(90deg, ${SIMULATION_COLOR_STOPS.map(
+  (stop) => `${rgba(stop.hex, stop.alpha)} ${stop.value * 100}%`,
+).join(', ')}), ${LEGEND_CHECKERBOARD_CSS}`;
+
+const NO_SCORE_SIMULATION_RGBA = rgba(NO_SCORE_COLOR, NO_SCORE_SIMULATION_ALPHA);
+
+export const NO_SCORE_SIMULATION_CSS = `linear-gradient(${NO_SCORE_SIMULATION_RGBA}, ${NO_SCORE_SIMULATION_RGBA}), ${LEGEND_CHECKERBOARD_CSS}`;
 
 export const LEGEND_TICKS: readonly number[] = [11, 25, 40, 55, 70, 85];
 

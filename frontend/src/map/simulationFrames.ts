@@ -10,22 +10,20 @@ export const KEYFRAME_HOURS: readonly number[] = Array.from(
 
 const LAST_KEYFRAME_INDEX = SIMULATION_KEYFRAME_COUNT - 1;
 
+export interface KeyframeBlend {
+  lower: number;
+  upper: number;
+  blend: number;
+}
+
 export function simulationTileUrl(rainKey: RainKey, keyframeHour: number, zoom: number | string, x: number | string, y: number | string): string {
   return `/api/v1/simulation/tiles/${rainKey}/${keyframeHour}/${zoom}/${x}/${y}.png?v=${TILE_VERSION}`;
 }
 
-export function simulationTileTemplate(rainKey: RainKey, keyframeHour: number): string {
-  return simulationTileUrl(rainKey, keyframeHour, '{z}', '{x}', '{y}');
-}
-
-export function frameOpacities(hour: number, baseOpacity: number, reducedMotion: boolean): number[] {
-  const opacities = new Array<number>(SIMULATION_KEYFRAME_COUNT).fill(0);
+export function keyframeBlend(hour: number, reducedMotion: boolean): KeyframeBlend {
   const position = Math.min(Math.max(hour / SIMULATION_KEYFRAME_STEP_HOURS, 0), LAST_KEYFRAME_INDEX);
   const lower = Math.floor(position);
   const upper = Math.min(lower + 1, LAST_KEYFRAME_INDEX);
   const blend = reducedMotion || upper === lower ? 0 : position - lower;
-  // Lower opacity compensates the upper layer so the composite keeps baseOpacity at every blend.
-  opacities[lower] = (baseOpacity * (1 - blend)) / (1 - baseOpacity * blend);
-  if (upper !== lower) opacities[upper] = baseOpacity * blend;
-  return opacities;
+  return { lower, upper, blend };
 }

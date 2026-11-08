@@ -8,16 +8,10 @@ import { AreaDrawingController } from '../map/googleDrawing';
 import { applyHeatmap, createHeatmapMapType } from '../map/googleHeatmap';
 import { loadGoogleMaps } from '../map/googleMapsLoader';
 import { addRegionOutlines, removeRegionOutlines } from '../map/googleRegions';
-import { addSimulationLayers, removeSimulationLayers, setSimulationOpacities } from '../map/googleSimulation';
-import {
-  FALLBACK_CENTER,
-  FALLBACK_ZOOM,
-  FILTER_DEBOUNCE_MS,
-  GOOGLE_MAP_STYLES,
-  GOOGLE_MAPS_API_KEY,
-  SIMULATION_OPACITY,
-} from '../map/mapConfig';
-import { frameOpacities, REDUCED_MOTION_QUERY } from '../map/simulationFrames';
+import { addSimulationLayer, removeSimulationLayer } from '../map/googleSimulation';
+import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, GOOGLE_MAP_STYLES, GOOGLE_MAPS_API_KEY } from '../map/mapConfig';
+import { SimulationTileController } from '../map/simulationCanvas';
+import { REDUCED_MOTION_QUERY } from '../map/simulationFrames';
 import { AreaHintBand } from './area/AreaHintBand';
 import { AreaToolbar } from './area/AreaToolbar';
 import { labelScoreText } from './area/areaFormat';
@@ -34,7 +28,7 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, s
   const drawingRef = useRef<AreaDrawingController | null>(null);
   const areaRef = useRef<AreaSelection | undefined>(area);
   areaRef.current = area;
-  const simulationLayersRef = useRef<google.maps.ImageMapType[]>([]);
+  const simulationControllerRef = useRef<SimulationTileController | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const reducedMotion = useMediaQuery(REDUCED_MOTION_QUERY);
 
@@ -119,17 +113,23 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, s
   useEffect(() => {
     if (!map || !simulationActive) return;
     const { simulationHour: hour, reducedMotion: reduced } = simulationFrameRef.current;
-    const layers = addSimulationLayers(map, rainKey, frameOpacities(hour, SIMULATION_OPACITY, reduced));
-    simulationLayersRef.current = layers;
+    const controller = new SimulationTileController(rainKey, hour, reduced);
+    const layer = addSimulationLayer(map, controller);
+    simulationControllerRef.current = controller;
     return () => {
-      removeSimulationLayers(map, layers);
-      simulationLayersRef.current = [];
+      removeSimulationLayer(map, layer);
+      controller.dispose();
+      simulationControllerRef.current = null;
     };
   }, [map, simulationActive, rainKey]);
 
   useEffect(() => {
-    setSimulationOpacities(simulationLayersRef.current, frameOpacities(simulationHour, SIMULATION_OPACITY, reducedMotion));
-  }, [simulationHour, reducedMotion, simulationActive, rainKey, map]);
+    simulationControllerRef.current?.setHour(simulationHour);
+  }, [simulationHour]);
+
+  useEffect(() => {
+    simulationControllerRef.current?.setReducedMotion(reducedMotion);
+  }, [reducedMotion]);
 
   useEffect(() => {
     popupRef.current?.setRainKey(rainKey);
