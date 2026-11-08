@@ -12,9 +12,11 @@ from app.tiles import (
     CACHE_CONTROL,
     MAX_ZOOM,
     TILE_CACHE_SIZE,
+    NO_SCORE_COLOR,
+    OPAQUE_ALPHA,
     build_cell_sql,
     hex_to_rgb,
-    ramp_to_rgb,
+    ramp_to_channels,
     render_cell_tile,
     show_all,
 )
@@ -25,18 +27,23 @@ HOURS_PER_DAY = 24
 RETAINED_DIGITS = 4
 UNAVAILABLE_DETAIL = "Simulationsdaten nicht lesbar"
 
-RETAINED_COLOR_STOPS: tuple[tuple[float, str], ...] = (
-    (0.0, "#FEEFD6"),
-    (0.2, "#ABD3B4"),
-    (0.4, "#5EB1A7"),
-    (0.6, "#1B8C8F"),
-    (0.8, "#0B6575"),
-    (1.0, "#064153"),
+RETAINED_COLOR_STOPS: tuple[tuple[float, str, float], ...] = (
+    (0.0, "#9BE7FF", 0.0),
+    (0.1, "#6FD3FF", 0.25),
+    (0.3, "#2FA8FF", 0.55),
+    (0.55, "#0A7CFF", 0.75),
+    (0.8, "#0050E6", 0.88),
+    (1.0, "#1A2FCC", 0.95),
 )
+NO_SCORE_ALPHA = 0.45
 
-STOP_RETAINED = np.array([share for share, _ in RETAINED_COLOR_STOPS], dtype=np.float64)
+STOP_RETAINED = np.array([share for share, _, _ in RETAINED_COLOR_STOPS], dtype=np.float64)
 STOP_CHANNELS = np.array(
-    [hex_to_rgb(color) for _, color in RETAINED_COLOR_STOPS], dtype=np.float64
+    [[*hex_to_rgb(color), alpha * OPAQUE_ALPHA] for _, color, alpha in RETAINED_COLOR_STOPS],
+    dtype=np.float64,
+)
+NO_SCORE_RGBA = np.array(
+    [*hex_to_rgb(NO_SCORE_COLOR), round(NO_SCORE_ALPHA * OPAQUE_ALPHA)], dtype=np.uint8
 )
 
 SURFACES = ("versiegelt", "wiese", "baum")
@@ -44,8 +51,8 @@ SURFACES = ("versiegelt", "wiese", "baum")
 router = APIRouter(prefix="/api/v1")
 
 
-def retained_to_rgb(shares: NDArray[np.float64]) -> NDArray[np.uint8]:
-    return ramp_to_rgb(shares, STOP_RETAINED, STOP_CHANNELS)
+def retained_to_rgba(shares: NDArray[np.float64]) -> NDArray[np.uint8]:
+    return ramp_to_channels(shares, STOP_RETAINED, STOP_CHANNELS)
 
 
 def surface_runoff_sql(surface: str) -> str:
@@ -81,7 +88,8 @@ def render_simulation_tile(regen: int, hour: int, zoom: int, x: int, y: int) -> 
             "simulation", retained_share_sql(), RETAINED_DIGITS, aggregate
         ),
         rain_parameters(regen, hour),
-        retained_to_rgb,
+        retained_to_rgba,
+        NO_SCORE_RGBA,
         show_all,
         UNAVAILABLE_DETAIL,
     )

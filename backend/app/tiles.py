@@ -59,22 +59,29 @@ STOP_SCORES = np.array([score for score, _ in SCORE_COLOR_STOPS], dtype=np.float
 STOP_CHANNELS = np.array(
     [hex_to_rgb(color) for _, color in SCORE_COLOR_STOPS], dtype=np.float64
 )
-NO_SCORE_RGB = np.array(hex_to_rgb(NO_SCORE_COLOR), dtype=np.uint8)
+OPAQUE_ALPHA = 255
+NO_SCORE_RGBA = np.array([*hex_to_rgb(NO_SCORE_COLOR), OPAQUE_ALPHA], dtype=np.uint8)
 
 
-def ramp_to_rgb(
+def ramp_to_channels(
     values: NDArray[np.float64],
     stop_values: NDArray[np.float64],
     stop_channels: NDArray[np.float64],
 ) -> NDArray[np.uint8]:
     channels = [
-        np.interp(values, stop_values, stop_channels[:, channel]) for channel in range(3)
+        np.interp(values, stop_values, stop_channels[:, channel])
+        for channel in range(stop_channels.shape[1])
     ]
     return np.rint(np.stack(channels, axis=-1)).astype(np.uint8)
 
 
 def score_to_rgb(scores: NDArray[np.float64]) -> NDArray[np.uint8]:
-    return ramp_to_rgb(scores, STOP_SCORES, STOP_CHANNELS)
+    return ramp_to_channels(scores, STOP_SCORES, STOP_CHANNELS)
+
+
+def score_to_rgba(scores: NDArray[np.float64]) -> NDArray[np.uint8]:
+    alpha = np.full((scores.size, 1), OPAQUE_ALPHA, dtype=np.uint8)
+    return np.concatenate([score_to_rgb(scores), alpha], axis=-1)
 
 
 def encode_png(rgba: NDArray[np.uint8]) -> bytes:
@@ -163,12 +170,14 @@ def show_all(values: NDArray[np.float64]) -> NDArray[np.bool_]:
 
 
 def cell_colors(
-    values: NDArray[np.float64], to_rgb: ColorFunction = score_to_rgb
+    values: NDArray[np.float64],
+    to_rgba: ColorFunction = score_to_rgba,
+    no_score_rgba: NDArray[np.uint8] = NO_SCORE_RGBA,
 ) -> NDArray[np.uint8]:
-    colors = np.empty((values.size, 3), dtype=np.uint8)
+    colors = np.empty((values.size, 4), dtype=np.uint8)
     unscored = np.isnan(values)
-    colors[unscored] = NO_SCORE_RGB
-    colors[~unscored] = to_rgb(values[~unscored])
+    colors[unscored] = no_score_rgba
+    colors[~unscored] = to_rgba(values[~unscored])
     return colors
 
 
@@ -180,8 +189,7 @@ def paint_pixels(
 ) -> None:
     rows = py.astype(np.intp)
     columns = px.astype(np.intp)
-    rgba[rows, columns, :3] = colors
-    rgba[rows, columns, 3] = 255
+    rgba[rows, columns] = colors
 
 
 def paint_footprints(
@@ -204,8 +212,7 @@ def paint_footprints(
         for offset_x in range(int((right - left).max())):
             columns = left + offset_x
             mask = row_mask & (columns < right) & (columns >= 0) & (columns < TILE_SIZE)
-            rgba[rows[mask], columns[mask], :3] = colors[mask]
-            rgba[rows[mask], columns[mask], 3] = 255
+            rgba[rows[mask], columns[mask]] = colors[mask]
 
 
 def render_cell_tile(
@@ -214,7 +221,8 @@ def render_cell_tile(
     y: int,
     build_sql: Callable[[bool], str],
     extra_parameters: dict[str, float],
-    to_rgb: ColorFunction,
+    to_rgba: ColorFunction,
+    no_score_rgba: NDArray[np.uint8],
     visible: Callable[[NDArray[np.float64]], NDArray[np.bool_]],
     unavailable_detail: str,
 ) -> bytes:
@@ -241,7 +249,7 @@ def render_cell_tile(
     if px.size == 0:
         return transparent_png()
     keep = visible(values)
-    colors = cell_colors(values[keep], to_rgb)
+    colors = cell_colors(values[keep], to_rgba, no_score_rgba)
     rgba = np.zeros((TILE_SIZE, TILE_SIZE, 4), dtype=np.uint8)
     if aggregate:
         paint_pixels(rgba, px[keep], py[keep], colors)
@@ -262,7 +270,8 @@ def render_tile(
         y,
         lambda aggregate: build_cell_sql("zellen", score, 2, aggregate),
         {},
-        score_to_rgb,
+        score_to_rgba,
+        NO_SCORE_RGBA,
         lambda scores: visible_mask(scores, score_min, score_max),
         "Zelldaten nicht lesbar",
     )

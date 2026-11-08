@@ -317,24 +317,24 @@ gehalten_anteil  = (P_t − Q(P_t)) / regen
 
 **Verhalten**
 
-- Jede Zelle mit Simulationsparametern erscheint in der Farbe der Skala unten, deckend (Alpha 255).
-- Zellen ohne Parameter (kein Score) sind grau (`#9E9E9E`), wie bei `/tiles`.
+- Jede Zelle mit Simulationsparametern erscheint in der Farbe und mit der Deckkraft der Skala unten: trockene Zellen sind durchsichtig, nasse Zellen deckend blau.
+- Zellen ohne Parameter (kein Score) sind grau (`#9E9E9E`) mit Alpha 0,45 (115 von 255), anders als bei `/tiles`, wo sie deckend sind.
 - Pixel ohne Zelle sind transparent.
 - Bis Zoom 16 (1 Pixel ≥ 1 Zelle) wird je Pixel der Mittelwert von `gehalten_anteil` aller bewerteten Zellen gezeichnet. Ab Zoom 17 wird jede Zelle als Quadrat ihrer Fläche gezeichnet.
 - Unter Zoom 13 und außerhalb des Rechengebiets liefert die API eine vollständig transparente Kachel. Das Frontend sollte `minZoom: 13` setzen.
 - Antwortheader: `Content-Type: image/png`, `Cache-Control: public, max-age=300, must-revalidate`. Gerenderte Kacheln werden zusätzlich im Server-Speicher gehalten.
 
-**Farbskala** (lineare Interpolation in RGB, unter 0 und über 1 wird die erste bzw. letzte Farbe verwendet)
+**Farbskala** (lineare Interpolation in RGB und Alpha, unter 0 und über 1 wird die erste bzw. letzte Stufe verwendet)
 
-| `gehalten_anteil` | Farbe |
-|---|---|
-| 0,0 | `#FEEFD6` |
-| 0,2 | `#ABD3B4` |
-| 0,4 | `#5EB1A7` |
-| 0,6 | `#1B8C8F` |
-| 0,8 | `#0B6575` |
-| 1,0 | `#064153` |
-| kein Score | `#9E9E9E` |
+| `gehalten_anteil` | Farbe | Alpha |
+|---|---|---|
+| 0,00 | `#9BE7FF` | 0,00 |
+| 0,10 | `#6FD3FF` | 0,25 |
+| 0,30 | `#2FA8FF` | 0,55 |
+| 0,55 | `#0A7CFF` | 0,75 |
+| 0,80 | `#0050E6` | 0,88 |
+| 1,00 | `#1A2FCC` | 0,95 |
+| kein Score | `#9E9E9E` | 0,45 |
 
 ```bash
 curl -o kachel.png "http://localhost:8001/api/v1/simulation/tiles/50/12/17/68711/45061.png"

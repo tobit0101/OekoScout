@@ -13,11 +13,11 @@ from app.simulation import (
     RETAINED_COLOR_STOPS,
     rain_parameters,
     retained_share_sql,
-    retained_to_rgb,
+    retained_to_rgba,
 )
 from app.tiles import CACHE_CONTROL
 from conftest import clear_api_caches
-from test_tiles import CELL_UNSCORED, GREY, tile_position
+from test_tiles import CELL_UNSCORED, tile_position
 
 CELL_MIXED = (48.9127069, 8.7206437)
 CELL_BELOW_THRESHOLD = (48.9127069, 8.7206711)
@@ -25,8 +25,9 @@ CELL_LINEAR = (48.9127159, 8.7206436)
 SCORED_CELLS = (CELL_MIXED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 ALL_CELLS = (CELL_MIXED, CELL_UNSCORED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 
-LIGHTEST = (0xFE, 0xEF, 0xD6, 255)
-DARKEST = (0x06, 0x41, 0x53, 255)
+LIGHTEST = (0x9B, 0xE7, 0xFF, 0)
+DARKEST = (0x1A, 0x2F, 0xCC, round(0.95 * 255))
+GREY = (0x9E, 0x9E, 0x9E, round(0.45 * 255))
 COLOUR_TOLERANCE = 1
 
 CELL_PARAMETERS: dict[tuple[float, float], tuple[float, ...] | None] = {
@@ -91,10 +92,10 @@ def reference_retained_share(
     return (rain - runoff) / regen
 
 
-def expected_rgb(share: float) -> tuple[int, int, int]:
+def expected_rgba(share: float) -> tuple[int, int, int, int]:
     if np.isnan(share):
-        return GREY[:3]
-    return tuple(int(channel) for channel in retained_to_rgb(np.array([share]))[0])
+        return GREY
+    return tuple(int(channel) for channel in retained_to_rgba(np.array([share]))[0])
 
 
 def fetch_pixel(
@@ -111,10 +112,9 @@ def fetch_pixel(
 
 
 def assert_close(
-    actual: tuple[int, int, int, int], expected: tuple[int, int, int]
+    actual: tuple[int, int, int, int], expected: tuple[int, int, int, int]
 ) -> None:
-    assert actual[3] == 255
-    assert max(abs(a - e) for a, e in zip(actual[:3], expected)) <= COLOUR_TOLERANCE
+    assert max(abs(a - e) for a, e in zip(actual, expected)) <= COLOUR_TOLERANCE
 
 
 def test_tile_response_format(simulation_client: TestClient) -> None:
@@ -129,13 +129,22 @@ def test_tile_response_format(simulation_client: TestClient) -> None:
         image = Image.open(io.BytesIO(response.content))
         assert image.size == (256, 256)
         assert image.mode == "RGBA"
-        assert np.asarray(image)[:, :, 3].max() == 255
+        assert np.asarray(image)[:, :, 3].max() > 0
 
 
-def test_hour_zero_is_lightest_colour(simulation_client: TestClient) -> None:
+def test_hour_zero_is_lightest_colour_and_transparent(
+    simulation_client: TestClient,
+) -> None:
     for cell in SCORED_CELLS:
         assert fetch_pixel(simulation_client, cell, 18, 50, 0) == LIGHTEST
     assert fetch_pixel(simulation_client, CELL_UNSCORED, 18, 50, 0) == GREY
+
+
+def test_no_score_cell_is_semi_transparent_grey(
+    simulation_client: TestClient,
+) -> None:
+    assert GREY[3] == 115
+    assert fetch_pixel(simulation_client, CELL_UNSCORED, 18, 50, 12) == GREY
 
 
 @pytest.mark.parametrize("regen", [30, 50, 80])
@@ -147,7 +156,7 @@ def test_hour_24_equals_score_formula(
         if parameters is None:
             assert pixel == GREY
             continue
-        assert_close(pixel, expected_rgb(reference_retained_share(parameters, regen, 24)))
+        assert_close(pixel, expected_rgba(reference_retained_share(parameters, regen, 24)))
 
 
 def test_cell_below_threshold_retains_everything(
@@ -202,7 +211,7 @@ def test_aggregated_zoom_averages_cells_per_pixel(
         if not shares:
             assert pixel == GREY
             continue
-        assert_close(pixel, expected_rgb(float(np.mean(shares))))
+        assert_close(pixel, expected_rgba(float(np.mean(shares))))
 
 
 def test_footprint_zoom_paints_each_cell(simulation_client: TestClient) -> None:
@@ -213,7 +222,7 @@ def test_footprint_zoom_paints_each_cell(simulation_client: TestClient) -> None:
         if parameters is None:
             assert pixel == GREY
             continue
-        assert_close(pixel, expected_rgb(reference_retained_share(parameters, regen, hour)))
+        assert_close(pixel, expected_rgba(reference_retained_share(parameters, regen, hour)))
 
 
 def test_retained_share_grows_with_hour(simulation_client: TestClient) -> None:
@@ -223,28 +232,37 @@ def test_retained_share_grows_with_hour(simulation_client: TestClient) -> None:
         assert share >= previous
         previous = share
         assert_close(
-            fetch_pixel(simulation_client, CELL_MIXED, 18, 50, hour), expected_rgb(share)
+            fetch_pixel(simulation_client, CELL_MIXED, 18, 50, hour), expected_rgba(share)
         )
 
 
 def test_colour_stops_are_exact() -> None:
-    shares = np.array([share for share, _ in RETAINED_COLOR_STOPS], dtype=np.float64)
+    shares = np.array([share for share, _, _ in RETAINED_COLOR_STOPS], dtype=np.float64)
     expected = np.array(
         [
-            [int(colour[i : i + 2], 16) for i in (1, 3, 5)]
-            for _, colour in RETAINED_COLOR_STOPS
+            [*(int(colour[i : i + 2], 16) for i in (1, 3, 5)), round(alpha * 255)]
+            for _, colour, alpha in RETAINED_COLOR_STOPS
         ]
     )
-    assert (retained_to_rgb(shares) == expected).all()
+    assert (retained_to_rgba(shares) == expected).all()
+    assert [alpha for *_, alpha in expected] == [0, 64, 140, 191, 224, 242]
 
 
 def test_colour_interpolation_and_clamping() -> None:
-    middle = retained_to_rgb(np.array([0.1]))[0]
-    expected = [round((a + b) / 2) for a, b in ((0xFE, 0xAB), (0xEF, 0xD3), (0xD6, 0xB4))]
-    assert list(middle) == expected
-    low, high = retained_to_rgb(np.array([-0.5, 1.5]))
-    assert tuple(low) == LIGHTEST[:3]
-    assert tuple(high) == DARKEST[:3]
+    ratio = (0.2 - 0.1) / (0.3 - 0.1)
+    expected = [
+        round(start + (end - start) * ratio)
+        for start, end in (
+            (0x6F, 0x2F),
+            (0xD3, 0xA8),
+            (0xFF, 0xFF),
+            (0.25 * 255, 0.55 * 255),
+        )
+    ]
+    assert list(retained_to_rgba(np.array([0.2]))[0]) == expected
+    low, high = retained_to_rgba(np.array([-0.5, 1.5]))
+    assert tuple(low) == LIGHTEST
+    assert tuple(high) == DARKEST
 
 
 def test_low_zoom_and_distant_tile_are_transparent(
