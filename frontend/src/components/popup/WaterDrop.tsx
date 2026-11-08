@@ -80,7 +80,7 @@ export function WaterDrop({ litres, unit = 'Liter', valueSuffix }: WaterDropProp
       <div aria-hidden="true">
         <FitLine text={valueText} centerY={VALUE_CENTER_Y} style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.3px' }}>
           {litresText}
-          {valueSuffix && <span style={{ fontSize: 13, fontWeight: 700, marginLeft: 2 }}>{valueSuffix}</span>}
+          {valueSuffix && ` ${valueSuffix}`}
         </FitLine>
         <FitLine text={unit} centerY={UNIT_CENTER_Y} style={{ fontSize: 11, fontWeight: 700 }} />
       </div>
