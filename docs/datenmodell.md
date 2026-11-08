@@ -136,6 +136,37 @@ UPDATE zellen SET geom = ST_MakeEnvelope(rechtswert, hochwert, rechtswert + 1, h
 CREATE INDEX ON zellen USING gist (geom);
 ```
 
+## Tagessimulation (`simulation.parquet`)
+
+Parameter, mit denen sich der Abfluss je Zelle für jede beliebige kumulierte Regenmenge P (0–80 mm) berechnen lässt, z. B. für eine Regentag-Simulation: zurückgehaltener Regen = P − Q(P). Gleiche Zeilen in gleicher Reihenfolge wie `zellen.parquet` (4.589.876 Zeilen, 35 MB, zstd), Verknüpfung über Zeilenposition oder `rechtswert`/`hochwert`.
+
+| Spalte | Typ | Leer erlaubt | Bedeutung | Einheit |
+|---|---|---|---|---|
+| `rechtswert`, `hochwert` | int32 | nein | linke untere Ecke, EPSG:25832 | m |
+| `breitengrad`, `laengengrad` | float64 | nein | Mittelpunkt, wie in `zellen.parquet` | Grad |
+| `anteil_versiegelt` | float32 | ja | Anteil Dach + versiegelt | 0–1 |
+| `s_versiegelt_mm` | float32 | ja | Speicher S der versiegelten Fläche (CN 98, hangkorrigiert) | mm |
+| `anteil_wiese` | float32 | ja | Anteil Wiese | 0–1 |
+| `s_wiese_mm` | float32 | ja | Speicher S Wiese (CN „open space, good“ nach Bodengruppe, hangkorrigiert) | mm |
+| `anteil_baum` | float32 | ja | Anteil Baum | 0–1 |
+| `s_baum_mm` | float32 | ja | Speicher S Baum (CN „woods–grass, poor“ nach Bodengruppe, hangkorrigiert) | mm |
+| `linearer_abflussanteil` | float32 | ja | Anteil Gründach × Abflussbeiwert 0,4 | 0–1 |
+
+Die Anteile sind wie im Score auf die Fläche ohne Fließgewässer normiert; stehendes Gewässer trägt 0 bei. Ist ein Anteil 0, ist das zugehörige S trotzdem gefüllt.
+
+Abfluss Q(P) in mm:
+
+```
+Q(P) = anteil_versiegelt * q(P, s_versiegelt_mm) + anteil_wiese * q(P, s_wiese_mm)
+     + anteil_baum * q(P, s_baum_mm) + linearer_abflussanteil * P
+q(P, S) = (P - 0.2 S)^2 / (P + 0.8 S)   für P > 0.2 S, sonst 0
+Score(P) = (1 - Q(P) / P) * 100
+```
+
+Alle sieben Parameterspalten sind leer, wo `abfluss_mm_*mm` in `zellen.parquet` leer ist (Muster identisch).
+
+Herkunft: `10_backend/export_simulation.py` führt `compute_window` der Rechnung je Block aus und leitet die Parameter mit den Funktionen aus `sponge_area_v3.py` ab. Prüfung im Skript: Q(P) aus den Parametern weicht bei 30–80 mm höchstens 0,05 mm von `abfluss_mm_<P>mm` ab (Rundung auf 1 Nachkommastelle) und höchstens 0,00001 mm von den ungerundeten Blockwerten; die Leer-Muster stimmen exakt überein.
+
 ## Herkunft
 
 - Methode: SCS Curve Number (TR-55), Bodengruppen nach NEH 630, Hangkorrektur SWAT+, Methodendokumentation `09_analyse/OekoScout_Methodendokumentation.pdf`
