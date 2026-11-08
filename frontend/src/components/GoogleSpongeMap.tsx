@@ -1,13 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AreaSelection } from '../hooks/useAreaSelection';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { addScoreAttribution, removeScoreAttribution } from '../map/googleAttribution';
 import { GoogleCellPopupController } from '../map/GoogleCellPopupController';
 import { AreaDrawingController } from '../map/googleDrawing';
 import { applyHeatmap, createHeatmapMapType } from '../map/googleHeatmap';
 import { loadGoogleMaps } from '../map/googleMapsLoader';
 import { addRegionOutlines, removeRegionOutlines } from '../map/googleRegions';
-import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, GOOGLE_MAP_STYLES, GOOGLE_MAPS_API_KEY } from '../map/mapConfig';
+import { addSimulationLayers, removeSimulationLayers, setSimulationOpacities } from '../map/googleSimulation';
+import {
+  FALLBACK_CENTER,
+  FALLBACK_ZOOM,
+  FILTER_DEBOUNCE_MS,
+  GOOGLE_MAP_STYLES,
+  GOOGLE_MAPS_API_KEY,
+  HEATMAP_OPACITY,
+} from '../map/mapConfig';
+import { frameOpacities, REDUCED_MOTION_QUERY } from '../map/simulationFrames';
 import { AreaHintBand } from './area/AreaHintBand';
 import { AreaToolbar } from './area/AreaToolbar';
 import { labelScoreText } from './area/areaFormat';
@@ -18,19 +28,24 @@ const MAX_ZOOM = 21;
 const MIN_ZOOM = 11;
 const FOCUS_ZOOM = 18;
 
-export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, focusTarget, area }: SpongeMapProps) {
+export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulationActive, simulationHour, focusTarget, area }: SpongeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<GoogleCellPopupController | null>(null);
   const drawingRef = useRef<AreaDrawingController | null>(null);
   const areaRef = useRef<AreaSelection | undefined>(area);
   areaRef.current = area;
+  const simulationLayersRef = useRef<google.maps.ImageMapType[]>([]);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const reducedMotion = useMediaQuery(REDUCED_MOTION_QUERY);
 
   const debouncedMin = useDebouncedValue(scoreMin, FILTER_DEBOUNCE_MS);
   const debouncedMax = useDebouncedValue(scoreMax, FILTER_DEBOUNCE_MS);
 
   const latestRef = useRef({ rainKey });
   latestRef.current = { rainKey };
+
+  const simulationFrameRef = useRef({ simulationHour, reducedMotion });
+  simulationFrameRef.current = { simulationHour, reducedMotion };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -97,8 +112,24 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, f
 
   useEffect(() => {
     if (!map) return;
-    applyHeatmap(map, heatmapVisible ? createHeatmapMapType(rainKey, debouncedMin, debouncedMax) : null);
-  }, [map, heatmapVisible, rainKey, debouncedMin, debouncedMax]);
+    const showHeatmap = heatmapVisible && !simulationActive;
+    applyHeatmap(map, showHeatmap ? createHeatmapMapType(rainKey, debouncedMin, debouncedMax) : null);
+  }, [map, heatmapVisible, simulationActive, rainKey, debouncedMin, debouncedMax]);
+
+  useEffect(() => {
+    if (!map || !simulationActive) return;
+    const { simulationHour: hour, reducedMotion: reduced } = simulationFrameRef.current;
+    const layers = addSimulationLayers(map, rainKey, frameOpacities(hour, HEATMAP_OPACITY, reduced));
+    simulationLayersRef.current = layers;
+    return () => {
+      removeSimulationLayers(map, layers);
+      simulationLayersRef.current = [];
+    };
+  }, [map, simulationActive, rainKey]);
+
+  useEffect(() => {
+    setSimulationOpacities(simulationLayersRef.current, frameOpacities(simulationHour, HEATMAP_OPACITY, reducedMotion));
+  }, [simulationHour, reducedMotion, simulationActive, rainKey, map]);
 
   useEffect(() => {
     popupRef.current?.setRainKey(rainKey);

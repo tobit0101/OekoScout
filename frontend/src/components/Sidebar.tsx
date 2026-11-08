@@ -25,6 +25,7 @@ interface SidebarProps {
   scoreMin: number;
   scoreMax: number;
   rainKey: RainKey;
+  simulationActive: boolean;
   collapsed: boolean;
   compact: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
@@ -51,7 +52,7 @@ function dispatchMapResize(): void {
 }
 
 export function Sidebar(props: SidebarProps) {
-  const { scoreMin, scoreMax, rainKey, collapsed, compact, onScoreMinChange, onScoreMaxChange, onRainChange, onCollapsedChange, area } = props;
+  const { scoreMin, scoreMax, rainKey, simulationActive, collapsed, compact, onScoreMinChange, onScoreMaxChange, onRainChange, onCollapsedChange, area } = props;
   const rainIndex = RAIN_STEPS.indexOf(rainKey);
   const lastIndex = RAIN_STEPS.length - 1;
   const pendingFocusId = useRef<string | null>(null);
@@ -117,7 +118,12 @@ export function Sidebar(props: SidebarProps) {
         <SidebarCollapseButton onCollapse={collapse} />
         <div className="sidebar-scroll">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <section aria-labelledby="score-filter-title">
+        <section
+          aria-labelledby="score-filter-title"
+          aria-disabled={simulationActive}
+          title={simulationActive ? 'Der Score Filter wirkt nicht in der Tagessimulation' : undefined}
+          style={{ opacity: simulationActive ? 0.5 : 1 }}
+        >
           <SectionTitle id="score-filter-title" icon={<ScoreIcon size={14} />}>Score Filter</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 12 }}>Schwamm Score</span>
@@ -137,6 +143,7 @@ export function Sidebar(props: SidebarProps) {
               max={100}
               value={scoreMin}
               aria-label="Schwamm Score von"
+              disabled={simulationActive}
               aria-valuetext={`${scoreMin} Prozent`}
               onChange={(event) => onScoreMinChange(Math.min(Number(event.target.value), scoreMax - MIN_SCORE_GAP))}
             />
@@ -146,6 +153,7 @@ export function Sidebar(props: SidebarProps) {
               max={100}
               value={scoreMax}
               aria-label="Schwamm Score bis"
+              disabled={simulationActive}
               aria-valuetext={`${scoreMax} Prozent`}
               onChange={(event) => onScoreMaxChange(Math.max(Number(event.target.value), scoreMin + MIN_SCORE_GAP))}
             />
@@ -208,7 +216,7 @@ export function Sidebar(props: SidebarProps) {
         style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: 12, marginTop: 16 }}
       >
         <SectionTitle>Heatmap-Legende</SectionTitle>
-        <Legend />
+        <Legend simulationRainMm={simulationActive ? Number(rainKey) : null} />
       </div>
         </div>
       </div>

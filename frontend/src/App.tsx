@@ -8,6 +8,7 @@ import { GoogleSpongeMap } from './components/GoogleSpongeMap';
 import type { FocusTarget } from './components/mapTypes';
 import { SpongeMap } from './components/SpongeMap';
 import { useAreaSelection } from './hooks/useAreaSelection';
+import { useDaySimulation } from './hooks/useDaySimulation';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { usePersistentBoolean } from './hooks/usePersistentState';
 import { useStats } from './hooks/useStats';
@@ -31,6 +32,8 @@ export function App() {
   const [scoreMax, setScoreMax] = useState(100);
   const [rainKey, setRainKey] = useState<RainKey>(DEFAULT_RAIN);
   const [searchTarget, setSearchTarget] = useState<FocusTarget | null>(null);
+  const simulation = useDaySimulation();
+  const simulationActive = simulation.status !== 'idle';
   const statsState = useStats();
   const area = useAreaSelection();
   const handledFinishRef = useRef(0);
@@ -67,6 +70,8 @@ export function App() {
       <NavBar
         heatmapVisible={heatmapVisible}
         onToggleHeatmap={() => setHeatmapVisible((visible) => !visible)}
+        simulation={simulation}
+        rainKey={rainKey}
         onSelectPlace={(place) => setSearchTarget((previous) => ({ ...place, nonce: (previous?.nonce ?? 0) + 1 }))}
       />
 
@@ -75,6 +80,7 @@ export function App() {
           scoreMin={scoreMin}
           scoreMax={scoreMax}
           rainKey={rainKey}
+          simulationActive={simulationActive}
           collapsed={collapsed}
           compact={compact}
           onCollapsedChange={setSidebarCollapsed}
@@ -93,7 +99,16 @@ export function App() {
         )}
 
         <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
-          <MapView rainKey={rainKey} scoreMin={scoreMin} scoreMax={scoreMax} heatmapVisible={heatmapVisible} focusTarget={searchTarget} area={area} />
+          <MapView
+            rainKey={rainKey}
+            scoreMin={scoreMin}
+            scoreMax={scoreMax}
+            heatmapVisible={heatmapVisible}
+            simulationActive={simulationActive}
+            simulationHour={simulation.hour}
+            focusTarget={searchTarget}
+            area={area}
+          />
 
           {collapsed && (
             <div
@@ -111,7 +126,7 @@ export function App() {
               }}
             >
               <SectionTitle>Heatmap-Legende</SectionTitle>
-              <Legend />
+              <Legend simulationRainMm={simulationActive ? Number(rainKey) : null} />
             </div>
           )}
         </div>

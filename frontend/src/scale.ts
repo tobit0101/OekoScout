@@ -13,6 +13,19 @@ export const SCORE_COLOR_STOPS: readonly ColorStop[] = [
   { score: 85, hex: '#1A9850' },
 ];
 
+export const SIMULATION_COLOR_STOPS: readonly ColorStop[] = [
+  { score: 0, hex: '#F4EBD0' },
+  { score: 20, hex: '#D5E6C8' },
+  { score: 40, hex: '#9FD1C2' },
+  { score: 60, hex: '#5BB0B4' },
+  { score: 80, hex: '#2B7F9A' },
+  { score: 100, hex: '#0B4F6C' },
+];
+
+export const SIMULATION_GRADIENT_CSS = `linear-gradient(90deg, ${SIMULATION_COLOR_STOPS.map(
+  (stop) => `${stop.hex} ${stop.score}%`,
+).join(', ')})`;
+
 export const NO_SCORE_COLOR = '#9E9E9E';
 
 export const LEGEND_TICKS: readonly number[] = [11, 25, 40, 55, 70, 85];

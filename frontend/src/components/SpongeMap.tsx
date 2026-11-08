@@ -6,7 +6,9 @@ import { CellPopupController } from '../map/CellPopupController';
 import { COLORS } from '../theme';
 import type { RainKey } from '../types/api';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
-import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, HEATMAP_OPACITY } from '../map/mapConfig';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import { FALLBACK_CENTER, FALLBACK_ZOOM, FILTER_DEBOUNCE_MS, HEATMAP_MIN_ZOOM, HEATMAP_OPACITY, TILE_VERSION } from '../map/mapConfig';
+import { frameOpacities, KEYFRAME_HOURS, REDUCED_MOTION_QUERY, simulationTileTemplate } from '../map/simulationFrames';
 import type { SpongeMapProps } from './mapTypes';
 
 const MAX_ZOOM = 20;
@@ -14,22 +16,28 @@ const FOCUS_ZOOM = 18;
 const TRANSPARENT_TILE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 
 function buildTileUrl(rainKey: RainKey, scoreMin: number, scoreMax: number): string {
-  return `/api/v1/tiles/${rainKey}/{z}/{x}/{y}.png?score_min=${scoreMin}&score_max=${scoreMax}&v=2`;
+  return `/api/v1/tiles/${rainKey}/{z}/{x}/{y}.png?score_min=${scoreMin}&score_max=${scoreMax}&v=${TILE_VERSION}`;
 }
 
-export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, focusTarget }: SpongeMapProps) {
+export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulationActive, simulationHour, focusTarget }: SpongeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const heatLayerRef = useRef<L.TileLayer | null>(null);
   const popupRef = useRef<CellPopupController | null>(null);
   const appliedUrlRef = useRef('');
+  const simulationLayersRef = useRef<L.TileLayer[]>([]);
+  const reducedMotion = useMediaQuery(REDUCED_MOTION_QUERY);
 
   const debouncedMin = useDebouncedValue(scoreMin, FILTER_DEBOUNCE_MS);
   const debouncedMax = useDebouncedValue(scoreMax, FILTER_DEBOUNCE_MS);
   const tileUrl = buildTileUrl(rainKey, debouncedMin, debouncedMax);
 
-  const latestRef = useRef({ rainKey, tileUrl, heatmapVisible });
-  latestRef.current = { rainKey, tileUrl, heatmapVisible };
+  const showHeatmap = heatmapVisible && !simulationActive;
+  const latestRef = useRef({ rainKey, tileUrl, showHeatmap });
+  latestRef.current = { rainKey, tileUrl, showHeatmap };
+
+  const simulationFrameRef = useRef({ simulationHour, reducedMotion });
+  simulationFrameRef.current = { simulationHour, reducedMotion };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -59,7 +67,7 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, focusTa
       errorTileUrl: TRANSPARENT_TILE,
     });
     appliedUrlRef.current = initial.tileUrl;
-    if (initial.heatmapVisible) heatLayer.addTo(map);
+    if (initial.showHeatmap) heatLayer.addTo(map);
 
     fetchRegions()
       .then((geojson) => {
@@ -96,9 +104,35 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, focusTa
     const map = mapRef.current;
     const layer = heatLayerRef.current;
     if (!map || !layer) return;
-    if (heatmapVisible) layer.addTo(map);
+    if (showHeatmap) layer.addTo(map);
     else layer.remove();
-  }, [heatmapVisible]);
+  }, [showHeatmap]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !simulationActive) return;
+    const { simulationHour: hour, reducedMotion: reduced } = simulationFrameRef.current;
+    const opacities = frameOpacities(hour, HEATMAP_OPACITY, reduced);
+    const layers = KEYFRAME_HOURS.map((keyframeHour, index) =>
+      L.tileLayer(simulationTileTemplate(rainKey, keyframeHour), {
+        minZoom: HEATMAP_MIN_ZOOM,
+        maxZoom: MAX_ZOOM,
+        opacity: opacities[index],
+        attribution: index === 0 ? ATTRIBUTION_SCORE : undefined,
+        errorTileUrl: TRANSPARENT_TILE,
+      }).addTo(map),
+    );
+    simulationLayersRef.current = layers;
+    return () => {
+      layers.forEach((layer) => layer.remove());
+      simulationLayersRef.current = [];
+    };
+  }, [simulationActive, rainKey]);
+
+  useEffect(() => {
+    const opacities = frameOpacities(simulationHour, HEATMAP_OPACITY, reducedMotion);
+    simulationLayersRef.current.forEach((layer, index) => layer.setOpacity(opacities[index]));
+  }, [simulationHour, reducedMotion, simulationActive, rainKey]);
 
   useEffect(() => {
     const layer = heatLayerRef.current;

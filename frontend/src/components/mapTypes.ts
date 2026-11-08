@@ -13,6 +13,8 @@ export interface SpongeMapProps {
   scoreMin: number;
   scoreMax: number;
   heatmapVisible: boolean;
+  simulationActive: boolean;
+  simulationHour: number;
   focusTarget?: FocusTarget | null;
   area?: AreaSelection;
 }
