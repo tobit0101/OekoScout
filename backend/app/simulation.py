@@ -28,14 +28,14 @@ RETAINED_DIGITS = 4
 UNAVAILABLE_DETAIL = "Simulationsdaten nicht lesbar"
 
 RETAINED_COLOR_STOPS: tuple[tuple[float, str, float], ...] = (
-    (0.0, "#9BE7FF", 0.0),
-    (0.1, "#6FD3FF", 0.25),
-    (0.3, "#2FA8FF", 0.55),
-    (0.55, "#0A7CFF", 0.75),
-    (0.8, "#0050E6", 0.88),
-    (1.0, "#1A2FCC", 0.95),
+    (0.0, "#D6EEFF", 0.0),
+    (0.04, "#D6EEFF", 0.85),
+    (0.25, "#8CCBFF", 0.85),
+    (0.5, "#3D95FF", 0.85),
+    (0.75, "#1259D9", 0.85),
+    (1.0, "#0A2A80", 0.85),
 )
-NO_SCORE_ALPHA = 0.45
+NO_SCORE_ALPHA = 0.0
 
 STOP_RETAINED = np.array([share for share, _, _ in RETAINED_COLOR_STOPS], dtype=np.float64)
 STOP_CHANNELS = np.array(

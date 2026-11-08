@@ -25,9 +25,9 @@ CELL_LINEAR = (48.9127159, 8.7206436)
 SCORED_CELLS = (CELL_MIXED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 ALL_CELLS = (CELL_MIXED, CELL_UNSCORED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 
-LIGHTEST = (0x9B, 0xE7, 0xFF, 0)
-DARKEST = (0x1A, 0x2F, 0xCC, round(0.95 * 255))
-GREY = (0x9E, 0x9E, 0x9E, round(0.45 * 255))
+LIGHTEST = (0xD6, 0xEE, 0xFF, 0)
+DARKEST = (0x0A, 0x2A, 0x80, round(0.85 * 255))
+GREY = (0x9E, 0x9E, 0x9E, 0)
 COLOUR_TOLERANCE = 1
 
 CELL_PARAMETERS: dict[tuple[float, float], tuple[float, ...] | None] = {
@@ -143,7 +143,7 @@ def test_hour_zero_is_lightest_colour_and_transparent(
 def test_no_score_cell_is_semi_transparent_grey(
     simulation_client: TestClient,
 ) -> None:
-    assert GREY[3] == 115
+    assert GREY[3] == 0
     assert fetch_pixel(simulation_client, CELL_UNSCORED, 18, 50, 12) == GREY
 
 
@@ -245,21 +245,21 @@ def test_colour_stops_are_exact() -> None:
         ]
     )
     assert (retained_to_rgba(shares) == expected).all()
-    assert [alpha for *_, alpha in expected] == [0, 64, 140, 191, 224, 242]
+    assert [alpha for *_, alpha in expected] == [0, 217, 217, 217, 217, 217]
 
 
 def test_colour_interpolation_and_clamping() -> None:
-    ratio = (0.2 - 0.1) / (0.3 - 0.1)
+    ratio = (0.375 - 0.25) / (0.5 - 0.25)
     expected = [
         round(start + (end - start) * ratio)
         for start, end in (
-            (0x6F, 0x2F),
-            (0xD3, 0xA8),
+            (0x8C, 0x3D),
+            (0xCB, 0x95),
             (0xFF, 0xFF),
-            (0.25 * 255, 0.55 * 255),
+            (0.85 * 255, 0.85 * 255),
         )
     ]
-    assert list(retained_to_rgba(np.array([0.2]))[0]) == expected
+    assert list(retained_to_rgba(np.array([0.375]))[0]) == expected
     low, high = retained_to_rgba(np.array([-0.5, 1.5]))
     assert tuple(low) == LIGHTEST
     assert tuple(high) == DARKEST

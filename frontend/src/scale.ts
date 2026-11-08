@@ -20,18 +20,18 @@ export interface SimulationColorStop {
 }
 
 export const SIMULATION_COLOR_STOPS: readonly SimulationColorStop[] = [
-  { value: 0, hex: '#9BE7FF', alpha: 0 },
-  { value: 0.1, hex: '#6FD3FF', alpha: 0.25 },
-  { value: 0.3, hex: '#2FA8FF', alpha: 0.55 },
-  { value: 0.55, hex: '#0A7CFF', alpha: 0.75 },
-  { value: 0.8, hex: '#0050E6', alpha: 0.88 },
-  { value: 1, hex: '#1A2FCC', alpha: 0.95 },
+  { value: 0, hex: '#D6EEFF', alpha: 0 },
+  { value: 0.04, hex: '#D6EEFF', alpha: 0.85 },
+  { value: 0.25, hex: '#8CCBFF', alpha: 0.85 },
+  { value: 0.5, hex: '#3D95FF', alpha: 0.85 },
+  { value: 0.75, hex: '#1259D9', alpha: 0.85 },
+  { value: 1, hex: '#0A2A80', alpha: 0.85 },
 ];
 
 export const SIMULATION_LEGEND_TICKS: readonly number[] = [0, 0.2, 0.4, 0.6, 0.8, 1];
 
 export const NO_SCORE_COLOR = '#9E9E9E';
-const NO_SCORE_SIMULATION_ALPHA = 0.45;
+const NO_SCORE_SIMULATION_ALPHA = 0;
 
 const LEGEND_CHECKERBOARD_CSS = 'repeating-conic-gradient(#C4C4C4 0% 25%, #EDEDED 0% 50%) 0 0 / 8px 8px';
 

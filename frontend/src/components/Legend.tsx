@@ -52,7 +52,7 @@ function SimulationLegend({ rainMm }: { rainMm: number }) {
       </div>
       <div
         role="img"
-        aria-label={`Farbskala Im Boden gehalten von durchsichtig (0 Liter pro Quadratmeter) bis kräftigem Blau (${rainMm} Liter pro Quadratmeter)`}
+        aria-label={`Farbskala Im Boden gehalten von durchsichtig (0 Liter pro Quadratmeter) über Hellblau bis Dunkelblau (${rainMm} Liter pro Quadratmeter)`}
         style={{ height: 10, borderRadius: 5, background: SIMULATION_GRADIENT_CSS, marginBottom: 4 }}
       />
       <div aria-hidden="true" style={{ position: 'relative', height: 14 }}>
@@ -71,17 +71,17 @@ function SimulationLegend({ rainMm }: { rainMm: number }) {
           </span>
         ))}
       </div>
-      <NoScoreRow background={NO_SCORE_SIMULATION_CSS} />
+      <NoScoreRow background={NO_SCORE_SIMULATION_CSS} label="Kein Score: nicht eingefärbt" />
       <div style={{ marginTop: 6, lineHeight: 1.4 }}>Regen gleichmäßig über 24 h verteilt · jeder m² für sich, ohne Zufluss</div>
     </div>
   );
 }
 
-function NoScoreRow({ background = NO_SCORE_COLOR }: { background?: string }) {
+function NoScoreRow({ background = NO_SCORE_COLOR, label = 'Kein Score' }: { background?: string; label?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, color: COLORS.text }}>
       <span style={{ width: 14, height: 10, borderRadius: 2, background, flexShrink: 0 }} />
-      <span>Kein Score</span>
+      <span>{label}</span>
     </div>
   );
 }
