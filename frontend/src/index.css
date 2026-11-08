@@ -146,7 +146,7 @@ body {
   position: absolute;
   top: 8px;
   height: 4px;
-  background: var(--color-primary);
+  background: var(--color-navy);
   border-radius: 99px;
 }
 

@@ -7,7 +7,7 @@ import type { AreaSelection } from '../hooks/useAreaSelection';
 import { AreaPanel } from './area/AreaPanel';
 import { Legend } from './Legend';
 import { SidebarCollapseButton } from './sidebar/SidebarCollapseButton';
-import { SidebarRail } from './sidebar/SidebarRail';
+import { SidebarRail, ScoreIcon, RainIcon } from './sidebar/SidebarRail';
 import {
   COLLAPSE_BUTTON_ID,
   EXPAND_BUTTON_ID,
@@ -99,7 +99,8 @@ export function Sidebar(props: SidebarProps) {
       aria-label="Filter und Legende"
       className="sidebar"
       data-overlay={isOverlay}
-      style={{ ...THEME_VARIABLES, width: asideWidth, zIndex: isOverlay ? 1100 : 1 }}
+      data-collapsed={collapsed}
+      style={{ ...THEME_VARIABLES, width: asideWidth, zIndex: isOverlay ? 1100 : 10 }}
       onTransitionEnd={handleTransitionEnd}
     >
       <div className="sidebar-layer" data-hidden={!collapsed} inert={!collapsed} aria-hidden={!collapsed}>
@@ -117,7 +118,7 @@ export function Sidebar(props: SidebarProps) {
         <div className="sidebar-scroll">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <section aria-labelledby="score-filter-title">
-          <SectionTitle id="score-filter-title">Score Filter</SectionTitle>
+          <SectionTitle id="score-filter-title" icon={<ScoreIcon size={14} />}>Score Filter</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 12 }}>Schwamm Score</span>
             <ValueChip>{scoreMin} – {scoreMax} %</ValueChip>
@@ -159,9 +160,9 @@ export function Sidebar(props: SidebarProps) {
         <Separator />
 
         <section aria-labelledby="rain-title">
-          <SectionTitle id="rain-title">Regenfall simulieren</SectionTitle>
+          <SectionTitle id="rain-title" icon={<RainIcon size={14} />}>Regenfall simulieren</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <label htmlFor={SECTION_FOCUS_IDS.rain}style={{ fontSize: 12 }}>Niederschlag in 24 h</label>
+            <label htmlFor={SECTION_FOCUS_IDS.rain} style={{ fontSize: 12 }}>Niederschlag in 24 h</label>
             <ValueChip>{rainKey} mm</ValueChip>
           </div>
 
@@ -216,7 +217,7 @@ export function Sidebar(props: SidebarProps) {
   );
 }
 
-export function SectionTitle({ children, id }: { children: ReactNode; id?: string }) {
+export function SectionTitle({ children, id, icon }: { children: ReactNode; id?: string; icon?: ReactNode }) {
   return (
     <h2
       id={id}
@@ -227,9 +228,13 @@ export function SectionTitle({ children, id }: { children: ReactNode; id?: strin
         letterSpacing: '1.5px',
         textTransform: 'uppercase',
         color: COLORS.textMuted,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
       }}
     >
-      {children}
+      {icon}
+      <span>{children}</span>
     </h2>
   );
 }
