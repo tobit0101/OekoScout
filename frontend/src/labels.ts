@@ -22,7 +22,7 @@ export const AUSSAGEKRAFT_DISPLAY: Record<Aussagekraft, { label: string; color: 
   BESTAETIGT: { label: 'Bestätigt', color: COLORS.statusGreen },
   NUR_LUFTBILD: { label: 'Nur Luftbild', color: COLORS.statusYellow },
   ANNAHME: { label: 'Annahme', color: COLORS.statusBlue },
-  WIDERSPRUCH: { label: 'Widerspruch – kein Score', color: COLORS.statusRed },
+  WIDERSPRUCH: { label: 'Widerspruch', color: COLORS.statusRed },
 };
 
 export const ANNAHME_LABEL: Record<string, string> = {
@@ -33,6 +33,6 @@ export const ANNAHME_LABEL: Record<string, string> = {
 };
 
 export const ATTRIBUTION_SCORE =
-  'Score: Schwamm Score Pforzheim · Daten: LGL-BW (dl-de/by-2-0), Stadt Pforzheim';
+  'Daten: LGL-BW (dl-de/by-2-0), Stadt Pforzheim';
 
 export const RAIN_STEPS = ['30', '40', '50', '60', '70', '80'] as const;

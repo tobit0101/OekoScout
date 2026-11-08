@@ -27,7 +27,7 @@ export function Legend() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, color: COLORS.text }}>
         <span style={{ width: 14, height: 10, borderRadius: 2, background: NO_SCORE_COLOR, flexShrink: 0 }} />
-        <span>Kein Score (nicht berechnet)</span>
+        <span>Kein Score</span>
       </div>
     </div>
   );

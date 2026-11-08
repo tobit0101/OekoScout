@@ -7,7 +7,7 @@ import type { AreaShape } from '../../types/area';
 import { InfoDialogShell } from '../dialog/InfoDialogShell';
 import { AussagekraftBar } from './AussagekraftBar';
 import { coverageNote } from './areaFormat';
-import { buildAreaInfoModel, buildInfoClipboardText, describeShape, INFO_FOOTER_NOTE, type AreaInfoModel } from './areaInfoModel';
+import { buildAreaInfoModel, buildInfoClipboardText, describeShape, type AreaInfoModel } from './areaInfoModel';
 import './areaInfoDialog.css';
 
 interface AreaInfoDialogProps {
@@ -160,7 +160,6 @@ export function AreaInfoDialog({ shape, statsState, rainKey, onClose }: AreaInfo
         </p>
       )}
       {model && <ReadyContent model={model} />}
-      <p className="area-info__footer">{INFO_FOOTER_NOTE}</p>
     </InfoDialogShell>
   );
 }

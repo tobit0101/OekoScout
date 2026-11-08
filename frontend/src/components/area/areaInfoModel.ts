@@ -44,7 +44,6 @@ export interface AreaInfoModel {
   mapsUrl: string;
 }
 
-export const INFO_FOOTER_NOTE = 'Bestandsaufnahme · kein Planungswert';
 
 const TITLE = 'Markierte Fläche';
 const COORDINATE_DECIMALS = 6;
@@ -105,7 +104,7 @@ export function buildAreaInfoModel(shape: AreaShape, stats: AreaStatsResponse, r
       { label: 'Zellen im Rechengebiet', value: formatInteger(stats.zellen) },
       { label: 'davon mit Score', value: formatInteger(stats.zellen_mit_score) },
       { label: `Abfluss bei ${rainKey} mm`, value: formatLiters(stats.abfluss_liter[rainKey]) },
-      { label: 'Rückhalt je m² mit Score', value: retainedPerSquareMeter(stats, rainKey) },
+      { label: 'Rückhalt je m²', value: retainedPerSquareMeter(stats, rainKey) },
     ],
     rainRows: buildRainRows(stats, rainKey),
     aussagekraft: aussagekraftEntries(stats.aussagekraft),
@@ -131,6 +130,6 @@ export function buildInfoClipboardText(model: AreaInfoModel): string {
     ...model.klassen.map((row) => `${row.label}: ${row.countText} (${row.share})`),
   ];
   if (model.note) lines.push(`Hinweis: ${model.note}`);
-  lines.push(INFO_FOOTER_NOTE, `Google Maps: ${model.mapsUrl}`);
+  lines.push(`Google Maps: ${model.mapsUrl}`);
   return lines.join('\n');
 }

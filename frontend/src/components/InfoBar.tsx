@@ -27,7 +27,6 @@ export function InfoBar({ statsState, rainKey }: InfoBarProps) {
     >
       <div aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: COLORS.primary, flexShrink: 0 }} />
       <StatsContent statsState={statsState} rainKey={rainKey} />
-      <div style={{ marginLeft: 'auto', fontWeight: 600, color: COLORS.navy }}>Bestandsaufnahme · kein Planungswert</div>
     </footer>
   );
 }

@@ -154,9 +154,6 @@ export function Sidebar(props: SidebarProps) {
             <span>50 %</span>
             <span>100 %</span>
           </div>
-          <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 6 }}>
-            Zellen ohne Score bleiben immer sichtbar (grau).
-          </div>
         </section>
 
         <Separator />
@@ -164,7 +161,7 @@ export function Sidebar(props: SidebarProps) {
         <section aria-labelledby="rain-title">
           <SectionTitle id="rain-title">Regenfall simulieren</SectionTitle>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <label htmlFor={SECTION_FOCUS_IDS.rain}style={{ fontSize: 12 }}>Niederschlag</label>
+            <label htmlFor={SECTION_FOCUS_IDS.rain}style={{ fontSize: 12 }}>Niederschlag in 24 h</label>
             <ValueChip>{rainKey} mm</ValueChip>
           </div>
 
@@ -190,7 +187,6 @@ export function Sidebar(props: SidebarProps) {
               </span>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Niederschlag in mm innerhalb 24 h</div>
         </section>
 
         {area?.shape && (

@@ -19,8 +19,6 @@ interface InfoRow {
   content?: ReactNode;
 }
 
-const NOTE = 'Bestandsaufnahme · kein Planungswert';
-
 function formatGridCoordinates(cellId: string): string {
   const [easting, northing] = cellId.split('_');
   if (!/^\d+$/.test(easting ?? '') || !/^\d+$/.test(northing ?? '')) return cellId;
@@ -97,7 +95,7 @@ function buildRows({ cell, lat, lng, rainKey }: Omit<CellInfoDialogProps, 'onClo
 }
 
 function buildClipboardText(rows: InfoRow[]): string {
-  return [...rows.map((row) => `${row.term}: ${row.text}`), NOTE].join('\n');
+  return rows.map((row) => `${row.term}: ${row.text}`).join('\n');
 }
 
 export function CellInfoDialog({ cell, lat, lng, rainKey, onClose }: CellInfoDialogProps) {
@@ -119,8 +117,6 @@ export function CellInfoDialog({ cell, lat, lng, rainKey, onClose }: CellInfoDia
           </div>
         ))}
       </dl>
-
-      <p style={{ margin: '12px 0 0', fontSize: 12, color: COLORS.textMuted }}>{NOTE}</p>
     </InfoDialogShell>
   );
 }
