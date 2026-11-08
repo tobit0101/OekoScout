@@ -41,7 +41,7 @@ npm install
 npm run dev
 ```
 
-Der Entwicklungsserver läuft unter **http://localhost:5173/** und leitet `/api` an das Backend auf Port 8001 weiter.
+Der Entwicklungsserver läuft unter **http://localhost:5173/** und leitet `/api` an das Backend auf Port 8001 weiter. Der Port ist fest eingestellt: Ist 5173 belegt, bricht Vite mit einer Fehlermeldung ab, statt auf einen anderen Port auszuweichen, für den der Google-Key nicht gilt. Den blockierenden Prozess zeigt `lsof -nP -iTCP:5173 -sTCP:LISTEN`.
 
 Optional: Für die Google-Maps-Karte `frontend/.env.example` nach `frontend/.env.local` kopieren und `VITE_GOOGLE_MAPS_API_KEY` eintragen. Der Key muss den Referrer `http://localhost:5173/*` erlauben. Ohne Key nutzt die App OpenStreetMap (Leaflet).
 
