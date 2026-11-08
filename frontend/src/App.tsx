@@ -35,7 +35,6 @@ export function App() {
   const area = useAreaSelection();
   const handledFinishRef = useRef(0);
 
-  const rainStats = statsState.status === 'ready' ? statsState.stats.score_je_regenmenge[`${rainKey}mm`] : undefined;
   const drawerShown = compact && drawerOpen;
 
   useEffect(() => {
@@ -76,7 +75,6 @@ export function App() {
           scoreMin={scoreMin}
           scoreMax={scoreMax}
           rainKey={rainKey}
-          rainStats={rainStats}
           collapsed={collapsed}
           compact={compact}
           onCollapsedChange={setSidebarCollapsed}

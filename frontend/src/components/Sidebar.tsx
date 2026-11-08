@@ -2,8 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode, TransitionEvent } from 'react';
 import { RAIN_STEPS } from '../labels';
 import { COLORS, SIDEBAR_WIDTH } from '../theme';
-import type { RainKey, ScoreStats } from '../types/api';
-import { formatDecimal } from '../utils/format';
+import type { RainKey } from '../types/api';
 import type { AreaSelection } from '../hooks/useAreaSelection';
 import { AreaPanel } from './area/AreaPanel';
 import { Legend } from './Legend';
@@ -26,7 +25,6 @@ interface SidebarProps {
   scoreMin: number;
   scoreMax: number;
   rainKey: RainKey;
-  rainStats: ScoreStats | undefined;
   collapsed: boolean;
   compact: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
@@ -53,10 +51,9 @@ function dispatchMapResize(): void {
 }
 
 export function Sidebar(props: SidebarProps) {
-  const { scoreMin, scoreMax, rainKey, rainStats, collapsed, compact, onScoreMinChange, onScoreMaxChange, onRainChange, onCollapsedChange, area } = props;
+  const { scoreMin, scoreMax, rainKey, collapsed, compact, onScoreMinChange, onScoreMaxChange, onRainChange, onCollapsedChange, area } = props;
   const rainIndex = RAIN_STEPS.indexOf(rainKey);
   const lastIndex = RAIN_STEPS.length - 1;
-  const meanRetained = rainStats ? (Number(rainKey) * rainStats.mittel) / 100 : null;
   const pendingFocusId = useRef<string | null>(null);
   const isFirstRender = useRef(true);
   const isOverlay = compact && !collapsed;
@@ -194,33 +191,6 @@ export function Sidebar(props: SidebarProps) {
             ))}
           </div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Niederschlag in mm innerhalb 24 h</div>
-
-          {meanRetained !== null && rainStats && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 7,
-                padding: '8px 10px',
-                background: COLORS.surfaceAlt,
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 6,
-                fontSize: 11,
-                color: COLORS.navy,
-                marginTop: 8,
-                lineHeight: 1.5,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLORS.navy} strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true">
-                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-              </svg>
-              <span>
-                Im Mittel hält 1 m² bei {rainKey} mm ca.{' '}
-                <span className="marker" style={{ fontWeight: 700 }}>{formatDecimal(meanRetained)} Liter</span> zurück
-                (∅ Score {formatDecimal(rainStats.mittel)} %, nur Zellen mit Score).
-              </span>
-            </div>
-          )}
         </section>
 
         {area?.shape && (

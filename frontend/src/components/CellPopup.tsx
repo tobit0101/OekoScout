@@ -45,7 +45,7 @@ function CellDetails({ cell, lat, lng, rainKey, onClose }: CellDetailsProps) {
       <ScoreCard
         score={hasScore ? score : null}
         rainMm={Number(rainKey)}
-        retainedLitres={hasScore ? Math.round(Number(rainKey) - runoff) : null}
+        retainedLitres={hasScore ? Number(rainKey) - runoff : null}
         noScoreReason={noScoreReason}
       />
       {isInfoOpen && (

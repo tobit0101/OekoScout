@@ -81,8 +81,6 @@ function buildRows({ cell, lat, lng, rainKey }: Omit<CellInfoDialogProps, 'onClo
     );
   }
   rows.push(
-    { term: 'Region', text: String(cell.region) },
-    { term: 'Zellen-ID', text: cell.id },
     { term: 'Koordinaten (WGS84)', text: `${lat.toFixed(6)}, ${lng.toFixed(6)}` },
     { term: 'Rechtswert / Hochwert', text: formatGridCoordinates(cell.id) },
     {

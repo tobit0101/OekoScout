@@ -1,14 +1,16 @@
 import { COLORS } from '../../theme';
+import { formatDecimal } from '../../utils/format';
 
 interface WaterDropProps {
   litres: number;
 }
 
 export function WaterDrop({ litres }: WaterDropProps) {
+  const litresText = formatDecimal(litres);
   return (
     <div
       role="img"
-      aria-label={`${litres} Liter zurückgehalten`}
+      aria-label={`${litresText} Liter zurückgehalten`}
       style={{ position: 'relative', width: 72, height: 90, flexShrink: 0 }}
     >
       <svg viewBox="0 0 72 90" width="100%" height="100%" aria-hidden="true" focusable="false">
@@ -38,7 +40,7 @@ export function WaterDrop({ litres }: WaterDropProps) {
           lineHeight: 1.1,
         }}
       >
-        <div style={{ fontSize: 22, fontWeight: 800 }}>{litres}</div>
+        <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.3px' }}>{litresText}</div>
         <div style={{ fontSize: 11, fontWeight: 700 }}>Liter</div>
       </div>
     </div>
