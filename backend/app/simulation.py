@@ -28,10 +28,10 @@ RETAINED_DIGITS = 4
 UNAVAILABLE_DETAIL = "Simulationsdaten nicht lesbar"
 
 RETAINED_COLOR_STOPS: tuple[tuple[float, str, float], ...] = (
-    (0.0, "#D6EEFF", 0.85),
-    (0.25, "#8CCBFF", 0.85),
-    (0.5, "#3D95FF", 0.85),
-    (0.75, "#1259D9", 0.85),
+    (0.0, "#A6D4FF", 0.85),
+    (0.25, "#5AA9F5", 0.85),
+    (0.5, "#2A7DEB", 0.85),
+    (0.75, "#1A50C8", 0.85),
     (1.0, "#0A2A80", 0.85),
 )
 NO_SCORE_ALPHA = 0.0

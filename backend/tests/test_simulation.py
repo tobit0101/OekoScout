@@ -25,7 +25,7 @@ CELL_LINEAR = (48.9127159, 8.7206436)
 SCORED_CELLS = (CELL_MIXED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 ALL_CELLS = (CELL_MIXED, CELL_UNSCORED, CELL_BELOW_THRESHOLD, CELL_LINEAR)
 
-LIGHTEST = (0xD6, 0xEE, 0xFF, round(0.85 * 255))
+LIGHTEST = (0xA6, 0xD4, 0xFF, round(0.85 * 255))
 DARKEST = (0x0A, 0x2A, 0x80, round(0.85 * 255))
 GREY = (0x9E, 0x9E, 0x9E, 0)
 COLOUR_TOLERANCE = 1
@@ -253,9 +253,9 @@ def test_colour_interpolation_and_clamping() -> None:
     expected = [
         round(start + (end - start) * ratio)
         for start, end in (
-            (0x8C, 0x3D),
-            (0xCB, 0x95),
-            (0xFF, 0xFF),
+            (0x5A, 0x2A),
+            (0xA9, 0x7D),
+            (0xF5, 0xEB),
             (0.85 * 255, 0.85 * 255),
         )
     ]
