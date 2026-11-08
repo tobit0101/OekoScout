@@ -1,5 +1,10 @@
 import { useState } from 'react';
+import { isFavorite, removeFavorite } from '../favorites/favoritesStore';
+import { saveFavorite } from '../favorites/saveFavorite';
+import { useFavorites } from '../favorites/useFavorites';
+import { KLASSE_LABEL } from '../labels';
 import type { CellResponse, RainKey } from '../types/api';
+import { formatDecimal } from '../utils/format';
 import { CellInfoDialog } from './popup/CellInfoDialog';
 import { CardFrame, MessageCard, ScoreCard } from './popup/ScoreCard';
 
@@ -40,8 +45,26 @@ function CellDetails({ cell, lat, lng, rainKey, onClose }: CellDetailsProps) {
   const noScoreReason =
     cell.aussagekraft === 'WIDERSPRUCH' ? 'Quellen widersprechen sich' : 'Fließgewässer – nicht berechnet';
 
+  useFavorites();
+  const isSaved = isFavorite(cell.id);
+  const toggleFavorite = () => {
+    if (isSaved) {
+      removeFavorite(cell.id);
+      return;
+    }
+    const scoreText = hasScore ? `${formatDecimal(score)} % bei ${rainKey} mm` : 'Kein Score';
+    void saveFavorite({
+      id: cell.id,
+      lat,
+      lng,
+      label: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+      secondary: `${KLASSE_LABEL[cell.klasse] ?? cell.klasse} · ${scoreText}`,
+      savedAt: Date.now(),
+    });
+  };
+
   return (
-    <CardFrame onClose={onClose} onInfo={() => setIsInfoOpen(true)}>
+    <CardFrame onClose={onClose} onInfo={() => setIsInfoOpen(true)} favorite={{ active: isSaved, onToggle: toggleFavorite }}>
       <ScoreCard
         score={hasScore ? score : null}
         rainMm={Number(rainKey)}

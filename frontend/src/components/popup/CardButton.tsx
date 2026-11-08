@@ -5,10 +5,11 @@ interface CardButtonProps {
   onClick: () => void;
   title?: string;
   opensDialog?: boolean;
+  pressed?: boolean;
   children: ReactNode;
 }
 
-export function CardButton({ label, title, onClick, opensDialog = false, children }: CardButtonProps) {
+export function CardButton({ label, title, onClick, opensDialog = false, pressed, children }: CardButtonProps) {
   return (
     <button
       type="button"
@@ -16,6 +17,7 @@ export function CardButton({ label, title, onClick, opensDialog = false, childre
       aria-label={label}
       title={title}
       aria-haspopup={opensDialog ? 'dialog' : undefined}
+      aria-pressed={pressed}
       onClick={onClick}
     >
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
@@ -32,6 +34,18 @@ export function InfoIcon() {
       <circle cx="12" cy="7.8" r="1.4" fill="currentColor" />
       <path d="M12 11v6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
     </>
+  );
+}
+
+export function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <path
+      d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+    />
   );
 }
 

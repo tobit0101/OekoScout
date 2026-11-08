@@ -1,8 +1,14 @@
 import { useId, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import type { PlaceSuggestion } from '../../api/geocoder';
+import { removeFavorite, type Favorite } from '../../favorites/favoritesStore';
+import { useFavorites } from '../../favorites/useFavorites';
 import { SEARCH_MIN_LENGTH, usePlaceSearch } from '../../hooks/usePlaceSearch';
 import { COLORS } from '../../theme';
 import { SuggestionList } from './SuggestionList';
+
+function toSuggestion(favorite: Favorite): PlaceSuggestion {
+  return { id: favorite.id, lat: favorite.lat, lng: favorite.lng, primary: favorite.label, secondary: favorite.secondary };
+}
 
 export interface SelectedPlace {
   lat: number;
@@ -20,9 +26,12 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const { status, suggestions, search, reset } = usePlaceSearch();
+  const { status, suggestions: searchSuggestions, search, reset } = usePlaceSearch();
+  const favorites = useFavorites();
 
-  const listVisible = open && status !== 'idle';
+  const showFavorites = value.trim() === '' && favorites.length > 0;
+  const suggestions = showFavorites ? favorites.map(toSuggestion) : searchSuggestions;
+  const listVisible = open && (showFavorites || status !== 'idle');
   const optionId = (index: number) => `${listboxId}-option-${index}`;
   const activeDescendant = listVisible && activeIndex >= 0 ? optionId(activeIndex) : undefined;
 
@@ -63,7 +72,18 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
     });
   };
 
+  const removeActiveFavorite = () => {
+    if (!showFavorites || activeIndex < 0) return false;
+    removeFavorite(suggestions[activeIndex].id);
+    setActiveIndex(-1);
+    return true;
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Delete' && listVisible && removeActiveFavorite()) {
+      event.preventDefault();
+      return;
+    }
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       moveActive(1);
@@ -124,6 +144,7 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
           onBlur={() => setOpen(false)}
           style={{ border: 'none', background: 'transparent', fontSize: 12, color: COLORS.text, outline: 'none', width: '100%', minWidth: 0, fontFamily: 'inherit' }}
         />
@@ -149,11 +170,18 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
         <SuggestionList
           listboxId={listboxId}
           optionId={optionId}
-          status={status}
+          status={showFavorites ? 'ready' : status}
           suggestions={suggestions}
           activeIndex={activeIndex}
           onSelect={select}
           onHover={setActiveIndex}
+          heading={showFavorites ? 'Favoriten' : undefined}
+          onRemove={showFavorites ? (favorite) => {
+                removeFavorite(favorite.id);
+                setActiveIndex(-1);
+              }
+            : undefined
+        }
         />
       )}
     </div>

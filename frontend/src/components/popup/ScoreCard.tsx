@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { scoreTextColor } from '../../scale';
 import { COLORS } from '../../theme';
 import { formatDecimal } from '../../utils/format';
-import { CardButton, CloseIcon, InfoIcon } from './CardButton';
+import { CardButton, CloseIcon, InfoIcon, StarIcon } from './CardButton';
 import { WaterDrop } from './WaterDrop';
 
 export const CARD_WIDTH = 272;
@@ -20,10 +20,11 @@ const captionStyle: CSSProperties = {
 interface CardFrameProps {
   onClose: () => void;
   onInfo?: () => void;
+  favorite?: { active: boolean; onToggle: () => void };
   children: ReactNode;
 }
 
-export function CardFrame({ onClose, onInfo, children }: CardFrameProps) {
+export function CardFrame({ onClose, onInfo, favorite, children }: CardFrameProps) {
   return (
     <div
       style={{
@@ -36,6 +37,16 @@ export function CardFrame({ onClose, onInfo, children }: CardFrameProps) {
       }}
     >
       <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 2 }}>
+        {favorite && (
+          <CardButton
+            label={favorite.active ? 'Favorit entfernen' : 'Als Favorit merken'}
+            title={favorite.active ? 'Favorit entfernen' : 'Als Favorit merken'}
+            pressed={favorite.active}
+            onClick={favorite.onToggle}
+          >
+            <StarIcon filled={favorite.active} />
+          </CardButton>
+        )}
         {onInfo && (
           <CardButton label="Weitere Informationen" onClick={onInfo} opensDialog>
             <InfoIcon />

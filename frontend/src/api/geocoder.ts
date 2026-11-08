@@ -1,4 +1,5 @@
 const PHOTON_URL = 'https://photon.komoot.io/api/';
+const PHOTON_REVERSE_URL = 'https://photon.komoot.io/reverse';
 const PFORZHEIM_BBOX = '8.60,48.83,8.82,48.95';
 const BIAS_LAT = 48.89;
 const BIAS_LON = 8.7;
@@ -58,6 +59,16 @@ function toSuggestion(feature: PhotonFeature): PlaceSuggestion | null {
   const osmId = properties.osm_type && properties.osm_id !== undefined ? `${properties.osm_type}${properties.osm_id}` : '';
   const id = osmId || `${position.lat},${position.lng}`;
   return { id, ...position, primary, secondary };
+}
+
+export async function reversePlace(lat: number, lng: number): Promise<PlaceSuggestion | null> {
+  const params = new URLSearchParams({ lat: String(lat), lon: String(lng), lang: 'de', limit: '1' });
+  const response = await fetch(`${PHOTON_REVERSE_URL}?${params.toString()}`);
+  if (!response.ok) throw new Error(`Photon reverse request failed: ${response.status}`);
+
+  const body = (await response.json()) as PhotonResponse;
+  const feature = body.features?.[0];
+  return feature ? toSuggestion(feature) : null;
 }
 
 export async function searchPlaces(query: string, signal: AbortSignal): Promise<PlaceSuggestion[]> {
