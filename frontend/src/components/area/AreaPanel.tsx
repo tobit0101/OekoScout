@@ -5,7 +5,6 @@ import type { AreaShape } from '../../types/area';
 import { formatArea, formatInteger, formatLiters } from '../../utils/format';
 import { useCopyToClipboard, type CopyStatus } from '../popup/useCopyToClipboard';
 import { AreaScoreCard } from './AreaScoreCard';
-import { AussagekraftBar } from './AussagekraftBar';
 import { buildCopyText, coverageNote } from './areaFormat';
 import './area.css';
 
@@ -74,9 +73,12 @@ export function AreaPanel({ shape, statsState, rainKey, onOpenInfo, onClear }: A
       {statsState.status === 'error' && <Notice role="alert">{statsState.message}</Notice>}
       {stats && (
         <>
-          <AreaScoreCard score={stats.score_mittel[rainKey]} rainKey={rainKey} />
+          <AreaScoreCard
+            score={stats.score_mittel[rainKey]}
+            rainKey={rainKey}
+            retainedPerSquareMeter={stats.zellen_mit_score > 0 ? stats.rueckhalt_liter[rainKey] / stats.zellen_mit_score : null}
+          />
           <Rows stats={stats} rainKey={rainKey} />
-          <AussagekraftBar counts={stats.aussagekraft} />
           {note && <Notice>{note}</Notice>}
           {stats.zellen > 0 && stats.zellen_mit_score === 0 && <Notice>Keine Zellen mit Score in der Fläche.</Notice>}
         </>

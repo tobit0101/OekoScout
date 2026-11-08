@@ -1,4 +1,5 @@
 import type { Aussagekraft, Bodengruppe, Klasse } from './types/api';
+import { NO_SCORE_COLOR } from './scale';
 import { COLORS } from './theme';
 
 export const KLASSE_LABEL: Record<Klasse, string> = {
@@ -22,7 +23,7 @@ export const AUSSAGEKRAFT_DISPLAY: Record<Aussagekraft, { label: string; color: 
   BESTAETIGT: { label: 'Bestätigt', color: COLORS.statusGreen },
   NUR_LUFTBILD: { label: 'Nur Luftbild', color: COLORS.statusYellow },
   ANNAHME: { label: 'Annahme', color: COLORS.statusBlue },
-  WIDERSPRUCH: { label: 'Widerspruch', color: COLORS.statusRed },
+  WIDERSPRUCH: { label: 'Widerspruch', color: NO_SCORE_COLOR },
 };
 
 export const ANNAHME_LABEL: Record<string, string> = {

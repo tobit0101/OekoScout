@@ -3,14 +3,15 @@ import { formatDecimal } from '../../utils/format';
 
 interface WaterDropProps {
   litres: number;
+  unit?: string;
 }
 
-export function WaterDrop({ litres }: WaterDropProps) {
+export function WaterDrop({ litres, unit = 'Liter' }: WaterDropProps) {
   const litresText = formatDecimal(litres);
   return (
     <div
       role="img"
-      aria-label={`${litresText} Liter zurückgehalten`}
+      aria-label={`${litresText} ${unit} zurückgehalten`}
       style={{ position: 'relative', width: 72, height: 90, flexShrink: 0 }}
     >
       <svg viewBox="0 0 72 90" width="100%" height="100%" aria-hidden="true" focusable="false">
@@ -41,7 +42,7 @@ export function WaterDrop({ litres }: WaterDropProps) {
         }}
       >
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.3px' }}>{litresText}</div>
-        <div style={{ fontSize: 11, fontWeight: 700 }}>Liter</div>
+        <div style={{ fontSize: 11, fontWeight: 700 }}>{unit}</div>
       </div>
     </div>
   );

@@ -18,7 +18,6 @@ export const COLORS = {
   statusGreen: '#1A9850',
   statusYellow: '#F2C230',
   statusBlue: '#3B6FB6',
-  statusRed: '#D73027',
 } as const;
 
 export const FONT_FAMILY = "'Open Sans', Helvetica, system-ui, sans-serif";
