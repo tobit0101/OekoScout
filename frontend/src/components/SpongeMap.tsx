@@ -21,7 +21,7 @@ function buildTileUrl(rainKey: RainKey, scoreMin: number, scoreMax: number): str
   return `/api/v1/tiles/${rainKey}/{z}/{x}/{y}.png?score_min=${scoreMin}&score_max=${scoreMax}&v=${TILE_VERSION}`;
 }
 
-export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulationActive, simulationHour, focusTarget }: SpongeMapProps) {
+export function SpongeMap({ rainKey, scoreMin, scoreMax, mode, simulationHour, focusTarget }: SpongeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const heatLayerRef = useRef<L.TileLayer | null>(null);
@@ -34,7 +34,8 @@ export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulat
   const debouncedMax = useDebouncedValue(scoreMax, FILTER_DEBOUNCE_MS);
   const tileUrl = buildTileUrl(rainKey, debouncedMin, debouncedMax);
 
-  const showHeatmap = heatmapVisible && !simulationActive;
+  const showHeatmap = mode === 'score';
+  const simulationActive = mode === 'schwamm';
   const latestRef = useRef({ rainKey, tileUrl, showHeatmap });
   latestRef.current = { rainKey, tileUrl, showHeatmap };
 

@@ -10,14 +10,17 @@ import { SpongeMap } from './components/SpongeMap';
 import { useAreaSelection } from './hooks/useAreaSelection';
 import { useDaySimulation } from './hooks/useDaySimulation';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import { usePersistentBoolean } from './hooks/usePersistentState';
+import { usePersistentBaseMapMode, usePersistentBoolean } from './hooks/usePersistentState';
 import { useStats } from './hooks/useStats';
 import { GOOGLE_MAPS_API_KEY } from './map/mapConfig';
 import { COLORS, FONT_FAMILY } from './theme';
 import type { RainKey } from './types/api';
+import type { DaySimulation } from './hooks/useDaySimulation';
+import type { BaseMapMode, MapMode } from './types/mapMode';
 
 const DEFAULT_RAIN: RainKey = '50';
 const SIDEBAR_STORAGE_KEY = 'schwammscore.sidebarCollapsed';
+const MAP_MODE_STORAGE_KEY = 'schwammscore.mapMode';
 const COMPACT_QUERY = '(max-width: 767px)';
 const MapView = GOOGLE_MAPS_API_KEY ? GoogleSpongeMap : SpongeMap;
 
@@ -27,13 +30,36 @@ export function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const collapsed = compact ? !drawerOpen : desktopCollapsed;
   const setSidebarCollapsed = (next: boolean) => (compact ? setDrawerOpen(!next) : setDesktopCollapsed(next));
-  const [heatmapVisible, setHeatmapVisible] = useState(true);
+  const [baseMode, setBaseMode] = usePersistentBaseMapMode(MAP_MODE_STORAGE_KEY);
+  const [schwammSelected, setSchwammSelected] = useState(false);
   const [scoreMin, setScoreMin] = useState(0);
   const [scoreMax, setScoreMax] = useState(100);
   const [rainKey, setRainKey] = useState<RainKey>(DEFAULT_RAIN);
   const [searchTarget, setSearchTarget] = useState<FocusTarget | null>(null);
   const simulation = useDaySimulation();
-  const simulationActive = simulation.status !== 'idle';
+  const mode: MapMode = schwammSelected ? 'schwamm' : baseMode;
+  const simulationActive = mode === 'schwamm';
+  const navSimulation: DaySimulation = {
+    ...simulation,
+    play: () => {
+      setSchwammSelected(true);
+      simulation.play();
+    },
+    seek: (hour: number) => {
+      setSchwammSelected(true);
+      simulation.seek(hour);
+    },
+  };
+
+  const selectMode = (next: MapMode) => {
+    if (next === 'schwamm') {
+      setSchwammSelected(true);
+      return;
+    }
+    simulation.stop();
+    setSchwammSelected(false);
+    setBaseMode(next satisfies BaseMapMode);
+  };
   const statsState = useStats();
   const area = useAreaSelection();
   const handledFinishRef = useRef(0);
@@ -68,9 +94,9 @@ export function App() {
       }}
     >
       <NavBar
-        heatmapVisible={heatmapVisible}
-        onToggleHeatmap={() => setHeatmapVisible((visible) => !visible)}
-        simulation={simulation}
+        mode={mode}
+        onModeChange={selectMode}
+        simulation={navSimulation}
         rainKey={rainKey}
         onSelectPlace={(place) => setSearchTarget((previous) => ({ ...place, nonce: (previous?.nonce ?? 0) + 1 }))}
       />
@@ -103,8 +129,7 @@ export function App() {
             rainKey={rainKey}
             scoreMin={scoreMin}
             scoreMax={scoreMax}
-            heatmapVisible={heatmapVisible}
-            simulationActive={simulationActive}
+            mode={mode}
             simulationHour={simulation.hour}
             focusTarget={searchTarget}
             area={area}

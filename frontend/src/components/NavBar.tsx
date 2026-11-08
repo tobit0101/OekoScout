@@ -4,6 +4,7 @@ import { useMediaQuery } from '../hooks/useMediaQuery';
 import { SIMULATION_HOURS } from '../map/mapConfig';
 import { COLORS } from '../theme';
 import type { RainKey } from '../types/api';
+import { isMapMode, MAP_MODE_OPTIONS, type MapMode } from '../types/mapMode';
 import { formatSimulationReadout } from '../utils/simulationFormat';
 import { PlaceSearch, type SelectedPlace } from './search/PlaceSearch';
 
@@ -11,14 +12,14 @@ const COMPACT_QUERY = '(max-width: 767px)';
 const SIMULATION_SLIDER_STEP = 0.5;
 
 interface NavBarProps {
-  heatmapVisible: boolean;
-  onToggleHeatmap: () => void;
+  mode: MapMode;
+  onModeChange: (mode: MapMode) => void;
   simulation: DaySimulation;
   rainKey: RainKey;
   onSelectPlace: (place: SelectedPlace) => void;
 }
 
-export function NavBar({ heatmapVisible, onToggleHeatmap, simulation, rainKey, onSelectPlace }: NavBarProps) {
+export function NavBar({ mode, onModeChange, simulation, rainKey, onSelectPlace }: NavBarProps) {
   const compact = useMediaQuery(COMPACT_QUERY);
   return (
     <nav
@@ -42,7 +43,7 @@ export function NavBar({ heatmapVisible, onToggleHeatmap, simulation, rainKey, o
 
       <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 6 : 12, marginLeft: 'auto', flexShrink: 0 }}>
         <SimulationControl simulation={simulation} rainKey={rainKey} compact={compact} />
-        <HeatmapSwitch checked={heatmapVisible} onToggle={onToggleHeatmap} compact={compact} />
+        <MapModeSelect mode={mode} onChange={onModeChange} compact={compact} />
         <NavButton disabled icon={<ExportIcon />} compact={compact}>
           Export
         </NavButton>
@@ -89,7 +90,7 @@ function playLabel(simulation: DaySimulation): string {
 }
 
 function SimulationControl({ simulation, rainKey, compact }: SimulationControlProps) {
-  const { status, hour, play, pause, stop, seek } = simulation;
+  const { status, hour, play, pause, seek } = simulation;
   const playing = status === 'playing';
   const label = playLabel(simulation);
   const readout = formatSimulationReadout(hour, Number(rainKey));
@@ -97,9 +98,6 @@ function SimulationControl({ simulation, rainKey, compact }: SimulationControlPr
     <div role="group" aria-label="Tagessimulation" style={{ display: 'flex', alignItems: 'center', gap: compact ? 4 : 6 }}>
       <SimulationButton label={label} onClick={playing ? pause : play}>
         {playing ? <PauseIcon /> : <PlayIcon />}
-      </SimulationButton>
-      <SimulationButton label="Simulation beenden" disabled={status === 'idle'} onClick={stop}>
-        <StopIcon />
       </SimulationButton>
       <input
         type="range"
@@ -179,49 +177,42 @@ function PauseIcon() {
   );
 }
 
-function StopIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <rect x="5" y="5" width="14" height="14" rx="2" />
-    </svg>
-  );
-}
-
-interface HeatmapSwitchProps {
-  checked: boolean;
-  onToggle: () => void;
+interface MapModeSelectProps {
+  mode: MapMode;
+  onChange: (mode: MapMode) => void;
   compact: boolean;
 }
 
-function HeatmapSwitch({ checked, onToggle, compact }: HeatmapSwitchProps) {
+function MapModeSelect({ mode, onChange, compact }: MapModeSelectProps) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={compact ? 'Heatmap' : undefined}
-      title={compact ? 'Heatmap' : undefined}
-      onClick={onToggle}
-      className="heatmap-switch"
+    <select
+      value={mode}
+      aria-label="Kartenebene"
+      title="Kartenebene"
+      onChange={(event) => {
+        const next = event.target.value;
+        if (isMapMode(next)) onChange(next);
+      }}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '4px 2px',
-        border: 'none',
-        background: 'transparent',
-        fontFamily: 'inherit',
+        height: 28,
+        padding: compact ? '0 2px' : '0 4px',
+        borderRadius: 6,
         fontSize: 12,
         fontWeight: 500,
+        fontFamily: 'inherit',
         color: COLORS.text,
+        background: COLORS.white,
+        border: `1px solid ${COLORS.border}`,
         cursor: 'pointer',
+        flexShrink: 0,
       }}
     >
-      {!compact && 'Heatmap'}
-      <span className="heatmap-switch__track" aria-hidden="true">
-        <span className="heatmap-switch__knob" />
-      </span>
-    </button>
+      {MAP_MODE_OPTIONS.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }
 

@@ -22,7 +22,7 @@ const MAX_ZOOM = 21;
 const MIN_ZOOM = 11;
 const FOCUS_ZOOM = 18;
 
-export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, simulationActive, simulationHour, focusTarget, area }: SpongeMapProps) {
+export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, mode, simulationHour, focusTarget, area }: SpongeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<GoogleCellPopupController | null>(null);
   const drawingRef = useRef<AreaDrawingController | null>(null);
@@ -106,12 +106,12 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, s
 
   useEffect(() => {
     if (!map) return;
-    const showHeatmap = heatmapVisible && !simulationActive;
+    const showHeatmap = mode === 'score';
     applyHeatmap(map, showHeatmap ? createHeatmapMapType(rainKey, debouncedMin, debouncedMax) : null);
-  }, [map, heatmapVisible, simulationActive, rainKey, debouncedMin, debouncedMax]);
+  }, [map, mode, rainKey, debouncedMin, debouncedMax]);
 
   useEffect(() => {
-    if (!map || !simulationActive) return;
+    if (!map || mode !== 'schwamm') return;
     const { simulationHour: hour, reducedMotion: reduced } = simulationFrameRef.current;
     const controller = new SimulationTileController(rainKey, hour, reduced);
     const layer = addSimulationLayer(map, controller);
@@ -121,7 +121,7 @@ export function GoogleSpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, s
       controller.dispose();
       simulationControllerRef.current = null;
     };
-  }, [map, simulationActive, rainKey]);
+  }, [map, mode, rainKey]);
 
   useEffect(() => {
     simulationControllerRef.current?.setHour(simulationHour);

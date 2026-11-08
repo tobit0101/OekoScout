@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import type { BaseMapMode } from '../types/mapMode';
 
 function readBoolean(key: string, fallback: boolean): boolean {
   try {
@@ -24,6 +25,37 @@ export function usePersistentBoolean(key: string, fallback: boolean): [boolean, 
     (next: boolean) => {
       setValue(next);
       writeBoolean(key, next);
+    },
+    [key],
+  );
+
+  return [value, update];
+}
+
+function readBaseMapMode(key: string): BaseMapMode {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw === 'aus' ? 'aus' : 'score';
+  } catch {
+    return 'score';
+  }
+}
+
+function writeBaseMapMode(key: string, value: BaseMapMode): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    return;
+  }
+}
+
+export function usePersistentBaseMapMode(key: string): [BaseMapMode, (next: BaseMapMode) => void] {
+  const [value, setValue] = useState<BaseMapMode>(() => readBaseMapMode(key));
+
+  const update = useCallback(
+    (next: BaseMapMode) => {
+      setValue(next);
+      writeBaseMapMode(key, next);
     },
     [key],
   );
