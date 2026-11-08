@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from app.tiles import SCORE_COLOR_STOPS, score_to_rgb
+from app.tiles import CACHE_CONTROL, SCORE_COLOR_STOPS, score_to_rgb
 
 CELL_UNSCORED = (48.9127069, 8.7206574)
 CELL_50 = (48.9127069, 8.7206711)
@@ -49,7 +49,7 @@ def test_tile_response_format(client: TestClient) -> None:
         response = client.get(f"/api/v1/tiles/50/{zoom}/{x}/{y}.png")
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
-        assert response.headers["cache-control"] == "public, max-age=86400"
+        assert response.headers["cache-control"] == CACHE_CONTROL
         image = Image.open(io.BytesIO(response.content))
         assert image.size == (256, 256)
         assert image.mode == "RGBA"

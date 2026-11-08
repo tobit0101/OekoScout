@@ -252,7 +252,7 @@ Liefert eine Heatmap-Kachel (256 × 256 px, PNG mit Alpha) im XYZ-Schema (Web Me
 - Pixel ohne Zelle sind transparent.
 - Bis Zoom 16 (1 Pixel ≥ 1 Zelle) wird je Pixel der Mittelwert der Scores aller bewerteten Zellen gezeichnet, der Filter gilt für diesen Mittelwert. Ein Pixel ohne bewertete Zelle ist grau. Ab Zoom 17 wird jede Zelle als Quadrat ihrer Fläche gezeichnet, ohne Lücken.
 - Unter Zoom 13 und außerhalb des Rechengebiets liefert die API eine vollständig transparente Kachel. Das Frontend sollte `minZoom: 13` setzen.
-- Antwortheader: `Content-Type: image/png`, `Cache-Control: public, max-age=86400`. Gerenderte Kacheln werden zusätzlich im Server-Speicher gehalten.
+- Antwortheader: `Content-Type: image/png`, `Cache-Control: public, max-age=300, must-revalidate`. Gerenderte Kacheln werden zusätzlich im Server-Speicher gehalten.
 
 **Farbskala** (lineare Interpolation in RGB, unter 11 % und über 85 % wird die erste bzw. letzte Farbe verwendet)
 
