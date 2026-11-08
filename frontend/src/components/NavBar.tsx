@@ -1,7 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react';
-import type { DaySimulation } from '../hooks/useDaySimulation';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { clampDurationSeconds, type DaySimulation } from '../hooks/useDaySimulation';
 import { useMediaQuery } from '../hooks/useMediaQuery';
-import { SIMULATION_HOURS } from '../map/mapConfig';
+import { SIMULATION_HOURS, SIMULATION_MAX_DURATION_S, SIMULATION_MIN_DURATION_S } from '../map/mapConfig';
 import { COLORS } from '../theme';
 import type { RainKey } from '../types/api';
 import { isMapMode, MAP_MODE_OPTIONS, type MapMode } from '../types/mapMode';
@@ -120,7 +120,68 @@ function SimulationControl({ simulation, rainKey, compact }: SimulationControlPr
           {readout}
         </span>
       )}
+      <DurationInput seconds={simulation.durationSeconds} onChange={simulation.setDurationSeconds} />
     </div>
+  );
+}
+
+interface DurationInputProps {
+  seconds: number;
+  onChange: (seconds: number) => void;
+}
+
+function DurationInput({ seconds, onChange }: DurationInputProps) {
+  const [draft, setDraft] = useState(String(seconds));
+
+  useEffect(() => setDraft(String(seconds)), [seconds]);
+
+  const handleChange = (value: string) => {
+    setDraft(value);
+    const parsed = Number(value);
+    if (value === '' || !Number.isFinite(parsed)) return;
+    if (parsed < SIMULATION_MIN_DURATION_S || parsed > SIMULATION_MAX_DURATION_S) return;
+    onChange(parsed);
+  };
+
+  const commit = () => {
+    const parsed = Number(draft);
+    const next = draft === '' || !Number.isFinite(parsed) ? seconds : clampDurationSeconds(parsed);
+    onChange(next);
+    setDraft(String(next));
+  };
+
+  return (
+    <label
+      title="Dauer der Animation für 24 Stunden"
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 500, color: COLORS.text, flexShrink: 0 }}
+    >
+      <input
+        type="number"
+        inputMode="numeric"
+        min={SIMULATION_MIN_DURATION_S}
+        max={SIMULATION_MAX_DURATION_S}
+        step={1}
+        value={draft}
+        aria-label="Dauer der Animation in Sekunden"
+        onChange={(event) => handleChange(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') commit();
+        }}
+        style={{
+          width: 48,
+          height: 28,
+          padding: '0 4px 0 8px',
+          borderRadius: 6,
+          border: `1px solid ${COLORS.border}`,
+          background: COLORS.white,
+          color: COLORS.navy,
+          font: 'inherit',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      />
+      <span aria-hidden="true">s</span>
+    </label>
   );
 }
 

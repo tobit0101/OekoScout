@@ -1,21 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { SIMULATION_DURATION_MS, SIMULATION_HOURS } from '../map/mapConfig';
+import {
+  SIMULATION_DEFAULT_DURATION_S,
+  SIMULATION_HOURS,
+  SIMULATION_MAX_DURATION_S,
+  SIMULATION_MIN_DURATION_S,
+} from '../map/mapConfig';
 
 export type SimulationStatus = 'idle' | 'playing' | 'paused';
 
 export interface DaySimulation {
   status: SimulationStatus;
   hour: number;
+  durationSeconds: number;
   play: () => void;
   pause: () => void;
   stop: () => void;
   seek: (hour: number) => void;
+  setDurationSeconds: (seconds: number) => void;
+}
+
+export function clampDurationSeconds(seconds: number): number {
+  return Math.min(Math.max(Math.round(seconds), SIMULATION_MIN_DURATION_S), SIMULATION_MAX_DURATION_S);
 }
 
 export function useDaySimulation(): DaySimulation {
   const [status, setStatus] = useState<SimulationStatus>('idle');
   const [hour, setHour] = useState(0);
+  const [durationSeconds, setDurationState] = useState(SIMULATION_DEFAULT_DURATION_S);
   const hourRef = useRef(0);
+  const durationRef = useRef(SIMULATION_DEFAULT_DURATION_S);
   const frameRef = useRef<number | null>(null);
 
   const cancelFrame = useCallback(() => {
@@ -32,13 +45,15 @@ export function useDaySimulation(): DaySimulation {
   const play = useCallback(() => {
     cancelFrame();
     const startHour = hourRef.current >= SIMULATION_HOURS ? 0 : hourRef.current;
-    const startTime = performance.now();
+    let previousTime = performance.now();
     commitHour(startHour);
     setStatus('playing');
 
+    // Advances incrementally so a duration change takes effect mid-run without a jump.
     const tick = (now: number) => {
-      const elapsedHours = ((now - startTime) / SIMULATION_DURATION_MS) * SIMULATION_HOURS;
-      const next = Math.min(startHour + elapsedHours, SIMULATION_HOURS);
+      const elapsedHours = ((now - previousTime) / (durationRef.current * 1000)) * SIMULATION_HOURS;
+      previousTime = now;
+      const next = Math.min(hourRef.current + elapsedHours, SIMULATION_HOURS);
       commitHour(next);
       if (next >= SIMULATION_HOURS) {
         frameRef.current = null;
@@ -70,7 +85,13 @@ export function useDaySimulation(): DaySimulation {
     [cancelFrame, commitHour],
   );
 
+  const setDurationSeconds = useCallback((seconds: number) => {
+    const next = clampDurationSeconds(seconds);
+    durationRef.current = next;
+    setDurationState(next);
+  }, []);
+
   useEffect(() => cancelFrame, [cancelFrame]);
 
-  return { status, hour, play, pause, stop, seek };
+  return { status, hour, durationSeconds, play, pause, stop, seek, setDurationSeconds };
 }
