@@ -14,7 +14,7 @@ const FOCUS_ZOOM = 18;
 const TRANSPARENT_TILE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 
 function buildTileUrl(rainKey: RainKey, scoreMin: number, scoreMax: number): string {
-  return `/api/v1/tiles/${rainKey}/{z}/{x}/{y}.png?score_min=${scoreMin}&score_max=${scoreMax}`;
+  return `/api/v1/tiles/${rainKey}/{z}/{x}/{y}.png?score_min=${scoreMin}&score_max=${scoreMax}&v=2`;
 }
 
 export function SpongeMap({ rainKey, scoreMin, scoreMax, heatmapVisible, focusTarget }: SpongeMapProps) {

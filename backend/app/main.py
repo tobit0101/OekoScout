@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from app.api import connection, load_regions, load_stats, router
 from app.area import router as area_router
@@ -33,6 +34,11 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="Schwammstadt-Score Pforzheim API", version="1.0.0", lifespan=lifespan
 )
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

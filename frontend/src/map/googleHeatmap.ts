@@ -13,7 +13,7 @@ export function createHeatmapMapType(rainKey: RainKey, scoreMin: number, scoreMa
       const tileCount = 2 ** zoom;
       if (coord.y < 0 || coord.y >= tileCount) return null;
       const x = ((coord.x % tileCount) + tileCount) % tileCount;
-      return `/api/v1/tiles/${rainKey}/${zoom}/${x}/${coord.y}.png?score_min=${scoreMin}&score_max=${scoreMax}`;
+      return `/api/v1/tiles/${rainKey}/${zoom}/${x}/${coord.y}.png?score_min=${scoreMin}&score_max=${scoreMax}&v=2`;
     },
   });
 }

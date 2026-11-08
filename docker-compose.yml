@@ -5,6 +5,7 @@ services:
       - "8001:8000"
     volumes:
       - ./data:/app/data:ro
+      - ./backend/app:/app/app:ro
     environment:
       - DATA_DIR=/app/data
     restart: unless-stopped
