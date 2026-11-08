@@ -85,7 +85,7 @@ export function ScoreCard({ score, rainMm, retainedLitres, noScoreReason }: Scor
           <>
             <p style={{ margin: 0, flex: 1 }}>
               Bei einem Regenfall von{' '}
-              <strong style={{ color: COLORS.cyanText }}>{rainMm} mm</strong> in 24h hält diese Fläche:
+              <strong style={{ color: COLORS.cyanText }}>{rainMm} mm</strong> in 24 h hält diese Fläche:
             </p>
             <WaterDrop litres={retainedLitres} />
           </>

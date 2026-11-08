@@ -70,7 +70,7 @@ function buildRows({ cell, lat, lng, rainKey }: Omit<CellInfoDialogProps, 'onClo
     { term: 'Fläche', text: KLASSE_LABEL[cell.klasse] ?? cell.klasse },
     { term: 'Bodengruppe', text: BODENGRUPPE_LABEL[cell.bodengruppe] ?? cell.bodengruppe },
     { term: 'Hangneigung', text: `${formatDecimal(cell.neigung_prozent)} %` },
-    { term: 'Regenmenge', text: `${rainKey} mm in 24h` },
+    { term: 'Regenmenge', text: `${rainKey} mm in 24 h` },
   );
   if (runoff !== null) {
     rows.push(

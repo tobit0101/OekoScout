@@ -55,7 +55,7 @@ export function AreaScoreCard({ score, rainKey, retainedPerSquareMeter }: AreaSc
           <div style={{ height: 1, background: COLORS.border }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', fontSize: 12, lineHeight: 1.45, color: COLORS.text }}>
             <p style={{ margin: 0, flex: 1 }}>
-              Bei einem Regenfall von <strong style={{ color: COLORS.cyanText }}>{rainKey} mm</strong> in 24h hält diese Fläche:
+              Bei einem Regenfall von <strong style={{ color: COLORS.cyanText }}>{rainKey} mm</strong> in 24 h hält diese Fläche:
             </p>
             <WaterDrop litres={retainedPerSquareMeter} valueSuffix="L" unit="je m²" />
           </div>
