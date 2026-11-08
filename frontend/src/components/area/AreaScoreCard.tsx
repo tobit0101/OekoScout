@@ -36,7 +36,7 @@ export function AreaScoreCard({ score, rainKey, retainedPerSquareMeter }: AreaSc
             ⌀ Schwamm Score bei {rainKey} mm{score === null ? '' : ` · ${scoreLabel(score)}`}
           </div>
         </div>
-        {retainedPerSquareMeter !== null && <WaterDrop litres={retainedPerSquareMeter} unit="L je m²" />}
+        {retainedPerSquareMeter !== null && <WaterDrop litres={retainedPerSquareMeter} valueSuffix="L" unit="je m²" />}
       </div>
       {score !== null && (
         <div aria-hidden="true" style={{ position: 'relative', height: 6, marginTop: 10, borderRadius: 3, background: SCORE_GRADIENT_CSS }}>
